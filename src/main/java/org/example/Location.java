@@ -42,6 +42,16 @@ public class Location {
         return new ArrayList<>(chargers);
     }
 
+    public Charger findChargerByNumber(String number) {
+        for (Charger charger : chargers) {
+            if (charger.getNumber().equals(number)) {
+                return charger;
+            }
+        }
+        return null;
+    }
+
+
     public void addTariff(Tariff tariff) {
         tariffs.add(tariff);
     }
@@ -49,6 +59,12 @@ public class Location {
     public List<Tariff> getTariffs() {
         return new ArrayList<>(tariffs);
     }
+
+    public void removeChargerByNumber(String number) {
+        chargers.removeIf(c -> c.getNumber().equals(number));
+    }
+
+
 }
 
 

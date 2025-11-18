@@ -2,21 +2,20 @@ package org.example;
 
 public class Charger {
 
+    private final int chargerId;    // interne ID, z.B. laufende Nummer
+    private String number;          // sichtbare Nummer, z.B. "1", "2"
+    private String type;            // "AC" oder "DC"
+    private int maxPowerKw;         // z.B. 22
 
-    private final int chargerId;
-    private String number;
-    private String type;   // z.B. "AC" oder "DC"
-    private String status; // z.B. "AVAILABLE", "IN_USE", "OUT_OF_ORDER"
-    private Location location;
+    private Location location;      // optional Rückreferenz
 
-    public Charger(int chargerId, String number, String type, String status, Location location) {
+    public Charger(int chargerId, String number, String type, int maxPowerKw, Location location) {
         this.chargerId = chargerId;
         this.number = number;
         this.type = type;
-        this.status = status;
+        this.maxPowerKw = maxPowerKw;
         this.location = location;
     }
-
 
     public int getChargerId() {
         return chargerId;
@@ -26,24 +25,12 @@ public class Charger {
         return number;
     }
 
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
     public String getType() {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+    public int getMaxPowerKw() {
+        return maxPowerKw;
     }
 
     public Location getLocation() {
@@ -55,17 +42,5 @@ public class Charger {
     }
 
 
-    public boolean isAvailable() {
-        return "AVAILABLE".equalsIgnoreCase(status);
-    }
-
-
-    public ChargingSession startSession(Client client) {
-        throw new UnsupportedOperationException("startSession not implemented yet");
-    }
-
-    public void stopSession(ChargingSession session, double energyKWh) {
-        throw new UnsupportedOperationException("stopSession not implemented yet");
-    }
 }
 
