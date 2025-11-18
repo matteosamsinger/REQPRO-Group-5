@@ -14,4 +14,10 @@ public class ElectricChargingStationNetwork {
     public Location findLocation(String id) {
         return locations.get(id);
     }
+
+    public void deleteLocation(String id) {
+        locations.remove(id);
+    }
 }
+
+
