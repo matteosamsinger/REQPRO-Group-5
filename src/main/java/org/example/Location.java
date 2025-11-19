@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Location {
 
-    private final String id;          // z.B. "LOC-001"
+    private final String id;
     private String name;
     private final String address;
 

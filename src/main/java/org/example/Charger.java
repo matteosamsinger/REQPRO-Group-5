@@ -2,12 +2,11 @@ package org.example;
 
 public class Charger {
 
-    private final int chargerId;    // interne ID, z.B. laufende Nummer
-    private String number;          // sichtbare Nummer, z.B. "1", "2"
-    private String type;            // "AC" oder "DC"
-    private int maxPowerKw;         // z.B. 22
-
-    private Location location;      // optional Rückreferenz
+    private final int chargerId;
+    private String number;
+    private String type;
+    private int maxPowerKw;
+    private Location location;
 
     public Charger(int chargerId, String number, String type, int maxPowerKw, Location location) {
         this.chargerId = chargerId;

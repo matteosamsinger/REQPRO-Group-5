@@ -29,9 +29,9 @@ public class ElectricChargingStationNetwork {
     }
 
 
-        // ... Locations & Chargers wie gehabt ...
 
-        // ----- Clients -----
+
+
 
         public void registerClient(Client client) {
             clients.put(client.getClientId(), client);
