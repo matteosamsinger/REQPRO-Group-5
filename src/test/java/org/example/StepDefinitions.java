@@ -107,7 +107,6 @@ public class StepDefinitions {
     @Given("a charger with number {string} type {string} and max power {int} kW at location {string} exists")
     public void aChargerWithNumberTypeAndMaxPowerKWAtLocationExists(String number, String type, int maxPower, String locationId) {
         Location location = network.findLocation(locationId);
-        // falls du ganz sicher sein willst:
         assertNotNull(location, "Location not found: " + locationId);
 
         int chargerId = location.getChargers().size() + 1;
@@ -132,7 +131,7 @@ public class StepDefinitions {
 
     @When("I register a client with id {string} name {string} and email {string}")
     public void iRegisterAClientWithIdNameAndEmail(String clientId, String name, String email) {
-        Account account = new Account(); // Startbalance 0
+        Account account = new Account();
         Client client = new Client(clientId, name, email, account);
         network.registerClient(client);
     }

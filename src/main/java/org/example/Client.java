@@ -41,7 +41,7 @@ public class Client {
         return account;
     }
 
-    // --- Methoden wie im Klassendiagramm, delegieren ans Account ---
+
 
     public double getBalance() {
         return account != null ? account.getBalance() : 0.0;
