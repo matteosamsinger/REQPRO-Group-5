@@ -52,6 +52,10 @@ public class ElectricChargingStationNetwork {
         }
     }
 
+    public java.util.Collection<Location> getAllLocations() {
+        return locations.values();
+    }
+
 
 }
 

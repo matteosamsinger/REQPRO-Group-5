@@ -7,6 +7,8 @@ import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 
 
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class StepDefinitions {
@@ -15,6 +17,8 @@ public class StepDefinitions {
     private Location lookedUpLocation;
     private Charger lookedUpCharger;
     private Client lookedUpClient;
+    private java.util.List<Charger> lastNetworkStatus;
+
 
     @Given("an empty charging network")
     public void anEmptyChargingNetwork() {
@@ -176,6 +180,72 @@ public class StepDefinitions {
     @When("I delete the charger with number {string} at location {string}")
     public void iDeleteTheChargerWithNumberAtLocation(String number, String locationId) {
         network.removeChargerFromLocation(locationId, number);
+    }
+
+    @Given("charger {string} at location {string} is currently charging")
+    public void chargerAtLocationIsCurrentlyCharging(String chargerNumber, String locationId) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Charger charger = null;
+        for (Charger c : location.getChargers()) {
+            if (c.getNumber().equals(chargerNumber)) {
+                charger = c;
+                break;
+            }
+        }
+        assertNotNull(charger, "Charger not found: " + chargerNumber);
+
+        charger.setStatus("CHARGING");
+    }
+
+    @And("charger {string} at location {string} is available")
+    public void chargerAtLocationIsAvailable(String chargerNumber, String locationId) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Charger charger = null;
+        for (Charger c : location.getChargers()) {
+            if (c.getNumber().equals(chargerNumber)) {
+                charger = c;
+                break;
+            }
+        }
+        assertNotNull(charger, "Charger not found: " + chargerNumber);
+
+        charger.setStatus("AVAILABLE");
+    }
+
+    @When("I request the network status")
+    public void iRequestTheNetworkStatus() {
+        lastNetworkStatus = new ArrayList<>();
+
+        for (Location loc : network.getAllLocations()) {
+            lastNetworkStatus.addAll(loc.getChargers());
+        }
+    }
+
+    @Then("I see {int} charger status entries")
+    public void iSeeChargerStatusEntries(int expectedCount) {
+        assertNotNull(lastNetworkStatus, "Network status was not requested yet");
+        assertEquals(expectedCount, lastNetworkStatus.size());
+    }
+
+    @And("one entry for charger {string} has status {string}")
+    public void oneEntryForChargerHasStatus(String chargerNumber, String expectedStatus) {
+        assertNotNull(lastNetworkStatus, "Network status was not requested yet");
+
+        boolean found = false;
+        for (Charger c : lastNetworkStatus) {
+            if (c.getNumber().equals(chargerNumber)
+                    && expectedStatus.equals(c.getStatus())) {
+                found = true;
+                break;
+            }
+        }
+
+        assertTrue(found,
+                "No charger " + chargerNumber + " with status " + expectedStatus + " found in network status");
     }
 }
 
