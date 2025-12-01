@@ -9,12 +9,28 @@ import io.cucumber.java.en.Then;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 public class StepDefinitions {
+
 
     private ElectricChargingStationNetwork network;
     private Location lookedUpLocation;
     private Charger lookedUpCharger;
     private Client lookedUpClient;
+    private ChargingSession currentSession;
+    private Client currentClient;
+    private Charger currentCharger;
+
+    private Charger findChargerByNumber(String chargerNumber) {
+        for (Location loc : network.getAllLocations()) {
+            for (Charger charger : loc.getChargers()) {
+                if (charger.getNumber().equals(chargerNumber)) {
+                    return charger;
+                }
+            }
+        }
+        return null;
+    }
 
     @Given("an empty charging network")
     public void anEmptyChargingNetwork() {
@@ -177,5 +193,99 @@ public class StepDefinitions {
     public void iDeleteTheChargerWithNumberAtLocation(String number, String locationId) {
         network.removeChargerFromLocation(locationId, number);
     }
+
+    @And("the account of client {string} has a balance of {double} EUR")
+    public void theAccountOfClientHasABalanceOfEur(String clientId, double amount) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+
+        Account account = client.getAccount();
+        assertNotNull(account, "Account for client not found: " + clientId);
+
+        // In unserem Background haben wir "empty account" → Balance sollte 0 sein:
+        assertEquals(0.0, account.getBalance(), 0.0001);
+
+        account.topUp(amount);
+    }
+
+
+    @When("I start a charging session for client {string} at charger {string} at {string}")
+    public void iStartAChargingSessionForClientAtChargerAt(String clientId, String chargerNumber, String startTimeText) {
+        currentClient = network.findClient(clientId);
+        assertNotNull(currentClient, "Client not found: " + clientId);
+
+        currentCharger = findChargerByNumber(chargerNumber);
+        assertNotNull(currentCharger, "Charger not found: " + chargerNumber);
+
+        java.time.LocalDateTime startTime = java.time.LocalDateTime.parse(startTimeText);
+
+        currentSession = new ChargingSession(1, currentClient, currentCharger, startTime);
+
+        // Charger ist jetzt im Status "CHARGING"
+        currentCharger.setStatus("CHARGING");
+    }
+
+
+    @And("I stop the charging session at {string} with energy {double} kWh and pricePerKWh {double} EUR")
+    public void iStopTheChargingSessionAtWithEnergyKWhAndPricePerKWhEur(String endTimeText, double energyKWh, double pricePerKWh) {
+        assertNotNull(currentSession, "No current charging session");
+
+        java.time.LocalDateTime endTime = java.time.LocalDateTime.parse(endTimeText);
+
+        // Session beenden und Preis berechnen
+        currentSession.stop(endTime, energyKWh, pricePerKWh);
+
+        // Betrag vom Account abbuchen
+        Account account = currentClient.getAccount();
+        account.debit(currentSession.getTotalPrice());
+
+        // Charger wieder verfügbar
+        currentCharger.setStatus("AVAILABLE");
+    }
+
+
+    @Then("the charging session should have a duration of {int} minutes")
+    public void theChargingSessionShouldHaveADurationOfMinutes(int expectedMinutes) {
+        assertNotNull(currentSession, "No current charging session");
+        assertEquals(expectedMinutes, currentSession.getDurationMinutes());
+    }
+
+
+    @And("the total price of the charging session should be {double} EUR")
+    public void theTotalPriceOfTheChargingSessionShouldBeEur(double expectedPrice) {
+        assertNotNull(currentSession, "No current charging session");
+        assertEquals(expectedPrice, currentSession.getTotalPrice(), 0.0001);
+    }
+
+
+    @And("the account balance of client {string} should be {double} EUR")
+    public void theAccountBalanceOfClientShouldBeEur(String clientId, double expectedBalance) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+
+        Account account = client.getAccount();
+        assertNotNull(account, "Account for client not found: " + clientId);
+
+        assertEquals(expectedBalance, account.getBalance(), 0.0001);
+    }
+
+
+    @And("the charger {string} at location {string} should be available again")
+    public void theChargerAtLocationShouldBeAvailableAgain(String chargerNumber, String locationId) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Charger charger = null;
+        for (Charger c : location.getChargers()) {
+            if (c.getNumber().equals(chargerNumber)) {
+                charger = c;
+                break;
+            }
+        }
+        assertNotNull(charger, "Charger not found at location: " + chargerNumber);
+
+        assertTrue(charger.isAvailable(), "Charger is not available");
+    }
+
 }
 

@@ -39,4 +39,20 @@ public class Account {
     public List<TopUp> getTopUps() {
         return Collections.unmodifiableList(topUps);
     }
+
+    public void topUpAccountWithMoney(double amount) {
+        topUp(amount); // nutzt deine vorhandene Logik
+    }
+
+
+    public double getAccountBalance() {
+        return getBalance();
+    }
+
+
+    public java.util.List<TopUp> getBalanceTopUps() {
+        return getTopUps();
+    }
+
+
 }
