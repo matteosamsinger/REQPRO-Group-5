@@ -1,79 +1,88 @@
 package org.example;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.List;
 
 public class ElectricChargingStationNetwork {
 
-    private final Map<String, Location> locations = new HashMap<>();
-    private final Map<String, Client> clients = new HashMap<>();
+    private final LocationManager locationManager = new LocationManager();
+    private final ClientManager clientManager = new ClientManager();
+    private final ChargingManager chargingManager =
+            new ChargingManager(locationManager, clientManager);
+
+    // --- Location-bezogene Methoden ---
 
     public void addLocation(Location location) {
-        locations.put(location.getId(), location);
+        locationManager.addLocation(location);
     }
 
     public Location findLocation(String id) {
-        return locations.get(id);
+        return locationManager.findLocation(id);
     }
 
     public void deleteLocation(String id) {
-        locations.remove(id);
+        locationManager.deleteLocation(id);
+    }
+
+    public Collection<Location> getAllLocations() {
+        return locationManager.getAllLocations();
     }
 
     public void addChargerToLocation(String locationId, Charger charger) {
-        Location location = findLocation(locationId);
-        if (location == null) {
-            throw new IllegalArgumentException("Location not found: " + locationId);
-        }
-        location.addCharger(charger);
+        locationManager.addChargerToLocation(locationId, charger);
     }
-
-
-
-
-
-
-        public void registerClient(Client client) {
-            clients.put(client.getClientId(), client);
-        }
-
-        public Client findClient(String clientId) {
-            return clients.get(clientId);
-        }
-
-        public void deleteClient(String clientId) {
-            clients.remove(clientId);
-        }
 
     public void removeChargerFromLocation(String locationId, String number) {
-        Location location = findLocation(locationId);
-        if (location != null) {
-            location.removeChargerByNumber(number);
-        }
+        locationManager.removeChargerFromLocation(locationId, number);
     }
 
-    public java.util.Collection<Location> getAllLocations() {
-        return locations.values();
-    }
     public void setEnergyTariffForLocation(String locationId, Tariff tariff) {
-        Location location = findLocation(locationId);
-        if (location == null) {
-            throw new IllegalArgumentException("Location not found: " + locationId);
-        }
-        location.setEnergyTariff(tariff);
+        locationManager.setEnergyTariffForLocation(locationId, tariff);
     }
 
     public Tariff getEnergyTariffForLocation(String locationId) {
-        Location location = findLocation(locationId);
-        if (location == null) {
-            throw new IllegalArgumentException("Location not found: " + locationId);
-        }
-        return location.getEnergyTariff();
+        return locationManager.getEnergyTariffForLocation(locationId);
     }
+
+    // Optional: für deine Liste der Locations
+    public String locationsToString() {
+        return locationManager.toString();
+    }
+
+    // --- Client-bezogene Methoden ---
+
+    public void registerClient(Client client) {
+        clientManager.registerClient(client);
+    }
+
     public void addClient(Client client) {
-        registerClient(client);
+        clientManager.registerClient(client);
     }
 
+    public Client findClient(String clientId) {
+        return clientManager.findClient(clientId);
+    }
+
+    public void deleteClient(String clientId) {
+        clientManager.deleteClient(clientId);
+    }
+
+    // --- Charging-bezogene Methoden (falls du sie nutzen willst) ---
+
+    public List<Charger> getNetworkStatus() {
+        return chargingManager.getNetworkStatus();
+    }
+
+    // Getter auf Manager, falls du sie irgendwo direkt brauchst:
+    public LocationManager getLocationManager() {
+        return locationManager;
+    }
+
+    public ClientManager getClientManager() {
+        return clientManager;
+    }
+
+    public ChargingManager getChargingManager() {
+        return chargingManager;
+    }
 }
-
-

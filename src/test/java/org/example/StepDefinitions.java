@@ -329,11 +329,7 @@ public class StepDefinitions {
 
     @When("I request the network status")
     public void iRequestTheNetworkStatus() {
-        lastNetworkStatus = new ArrayList<>();
-
-        for (Location loc : network.getAllLocations()) {
-            lastNetworkStatus.addAll(loc.getChargers());
-        }
+        lastNetworkStatus = network.getNetworkStatus();
     }
 
     @Then("I see {int} charger status entries")
