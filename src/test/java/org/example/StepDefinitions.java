@@ -5,6 +5,14 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import java.time.LocalDate;
+import org.example.Client;
+import org.example.Account;
+import org.example.ElectricChargingStationNetwork;
+
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -177,5 +185,103 @@ public class StepDefinitions {
     public void iDeleteTheChargerWithNumberAtLocation(String number, String locationId) {
         network.removeChargerFromLocation(locationId, number);
     }
+
+    @When("I set an energy tariff at location {string} with AC price per kWh {double} EUR and DC price per kWh {double} EUR")
+    public void iSetAnEnergyTariffAtLocationWithACPricePerKWhEURAndDCPricePerKWhEUR( String locationId,
+                                                                                     double acPrice,
+                                                                                     double dcPrice) {
+        {
+            Location location = network.findLocation(locationId);
+            assertNotNull(location, "Location not found: " + locationId);
+
+            Tariff tariff = new Tariff(
+                    1,                // tariffId (erstmal fix)
+                    LocalDate.now(),  // validFrom
+                    acPrice,          // pricePerKWhAC
+                    0.0,              // pricePerMinuteAC
+                    dcPrice,          // pricePerKWhDC
+                    0.0,              // pricePerMinuteDC
+                    location          // location
+            );
+
+            network.setEnergyTariffForLocation(locationId, tariff);
+        }
+    }
+
+    @Then("the energy tariff at location {string} should have AC price per kWh {double} EUR and DC price per kWh {double} EUR")
+    public void theEnergyTariffAtLocationShouldHaveACPricePerKWhEURAndDCPricePerKWhEUR(String locationId,
+                                                                                       double expectedAcPrice,
+                                                                                       double expectedDcPrice) {
+        Tariff tariff = network.getEnergyTariffForLocation(locationId);
+        assertNotNull(tariff, "No energy tariff set for location " + locationId);
+
+        assertEquals(expectedAcPrice, tariff.getPricePerKWhAC(), 0.0001);
+        assertEquals(expectedDcPrice, tariff.getPricePerKWhDC(), 0.0001);
+    }
+
+    @And("I add a charging transaction of {int} EUR for client {string}")
+    public void iAddAChargingTransactionOfEURForClient(int amount, String clientId) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+
+        Account account = client.getAccount();
+        assertNotNull(account, "Client has no account: " + clientId);
+
+        int nextId = account.getTransactions().size() + 1;
+
+        Transaction tx = new Transaction(
+                nextId,   // transactionId
+                nextId,   // positionNumber (kannst du später anders setzen, aber so ist es konsistent)
+                amount    // Betrag in EUR
+        );
+
+        account.debit(amount);
+        account.addTransaction(tx);
+    }
+
+
+    @And("I request the invoice status for client {string}")
+    public void iRequestTheInvoiceStatusForClient(String clientId) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+        // keine weitere Logik nötig – ausgewertet wird im Then-Step
+    }
+
+
+    @Then("the invoice for client {string} should contain {int} top-ups and {int} charging transaction")
+    public void theInvoiceForClientShouldContainTopUpsAndChargingTransaction(
+            String clientId,
+            int expectedTopUps,
+            int expectedTransactions
+    ) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+
+        Account account = client.getAccount();
+        assertNotNull(account, "Client has no account: " + clientId);
+
+        assertEquals(expectedTopUps, account.getTopUps().size());
+        assertEquals(expectedTransactions, account.getTransactions().size());
+    }
+    @And("a client with id {string} name {string} and an account with balance {int} EUR exists")
+    public void aClientWithIdNameAndAnAccountWithBalanceEURExists(String clientId, String name, int balance) {
+        // Neues Konto mit Startsaldo
+        Account account = new Account();   // startet bei 0.0
+
+        if (balance > 0) {
+            account.topUp(balance);        // positives Startguthaben
+        } else if (balance < 0) {
+            account.debit(-balance);       // negativer Startstand (falls du das brauchst)
+        }
+
+        // Client inkl. Account anlegen
+        Client client = new Client(clientId, name, "dummy@example.com", account);
+
+        // Im Netzwerk registrieren
+        network.addClient(client);
+    }
+
+
+
 }
 

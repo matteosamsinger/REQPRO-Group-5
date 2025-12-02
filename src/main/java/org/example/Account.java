@@ -39,4 +39,5 @@ public class Account {
     public List<TopUp> getTopUps() {
         return Collections.unmodifiableList(topUps);
     }
+
 }

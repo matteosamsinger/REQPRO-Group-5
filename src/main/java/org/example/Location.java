@@ -8,7 +8,7 @@ public class Location {
     private final String id;
     private String name;
     private final String address;
-
+    private Tariff energyTariff;
     private final List<Charger> chargers = new ArrayList<>();
     private final List<Tariff> tariffs = new ArrayList<>();
 
@@ -63,8 +63,12 @@ public class Location {
     public void removeChargerByNumber(String number) {
         chargers.removeIf(c -> c.getNumber().equals(number));
     }
-
-
+    public Tariff getEnergyTariff() {
+        return energyTariff;
+    }
+    public void setEnergyTariff(Tariff energyTariff) {
+        this.energyTariff = energyTariff;
+    }
 }
 
 
