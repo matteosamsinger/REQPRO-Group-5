@@ -55,6 +55,24 @@ public class ElectricChargingStationNetwork {
     public java.util.Collection<Location> getAllLocations() {
         return locations.values();
     }
+    public void setEnergyTariffForLocation(String locationId, Tariff tariff) {
+        Location location = findLocation(locationId);
+        if (location == null) {
+            throw new IllegalArgumentException("Location not found: " + locationId);
+        }
+        location.setEnergyTariff(tariff);
+    }
+
+    public Tariff getEnergyTariffForLocation(String locationId) {
+        Location location = findLocation(locationId);
+        if (location == null) {
+            throw new IllegalArgumentException("Location not found: " + locationId);
+        }
+        return location.getEnergyTariff();
+    }
+    public void addClient(Client client) {
+        registerClient(client);
+    }
 
 }
 

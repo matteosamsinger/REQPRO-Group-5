@@ -5,6 +5,9 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import java.time.LocalDate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 import java.util.ArrayList;
@@ -354,6 +357,85 @@ public class StepDefinitions {
 
         assertTrue(found,
                 "No charger " + chargerNumber + " with status " + expectedStatus + " found in network status");
+    }
+
+    @And("a client with id {string} name {string} and an account with balance {int} EUR exists")
+    public void aClientWithIdNameAndAnAccountWithBalanceEURExists(String clientId, String name, int balance) {
+        Account account = new Account();
+
+        if (balance > 0) {
+            account.topUp(balance);
+        } else if (balance < 0) {
+            account.debit(-balance);
+        }
+
+        Client client = new Client(clientId, name, "dummy@example.com", account);
+
+        network.addClient(client);
+    }
+
+
+    @And("I add a charging transaction of {int} EUR for client {string}")
+    public void iAddAChargingTransactionOfEURForClient(int amount, String clientId) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+
+        Account account = client.getAccount();
+        assertNotNull(account, "Client has no account: " + clientId);
+
+        int nextId = account.getTransactions().size() + 1;
+        Transaction tx = new Transaction(nextId, nextId, amount);
+
+        account.debit(amount);
+        account.addTransaction(tx);
+    }
+
+
+    @And("I request the invoice status for client {string}")
+    public void iRequestTheInvoiceStatusForClient(String clientId) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+        // Nichts weiter nötig – ausgewertet wird im Then-Step
+    }
+
+
+    @Then("the invoice for client {string} should contain {int} top-ups and {int} charging transaction")
+    public void theInvoiceForClientShouldContainTopUpsAndChargingTransaction(String clientId, int expectedTopUps, int expectedTransactions) {
+        Client client = network.findClient(clientId);
+        assertNotNull(client, "Client not found: " + clientId);
+
+        Account account = client.getAccount();
+        assertNotNull(account, "Client has no account: " + clientId);
+
+        assertEquals(expectedTopUps, account.getTopUps().size());
+        assertEquals(expectedTransactions, account.getTransactions().size());
+    }
+
+
+    @When("I set an energy tariff at location {string} with AC price per kWh {double} EUR and DC price per kWh {double} EUR")
+    public void iSetAnEnergyTariffAtLocationWithACPricePerKWhAndDCPricePerKWh(String locationId, double acPrice, double dcPrice) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Tariff tariff = new Tariff(
+                1,                // tariffId (hier einfach 1, reicht für MVP)
+                LocalDate.now(),  // validFrom
+                acPrice,          // pricePerKWhAC
+                0.0,              // pricePerMinuteAC
+                dcPrice,          // pricePerKWhDC
+                0.0,              // pricePerMinuteDC
+                location          // location
+        );
+
+        network.setEnergyTariffForLocation(locationId, tariff);
+    }
+    @Then("the energy tariff at location {string} should have AC price per kWh {double} EUR and DC price per kWh {double} EUR")
+    public void theEnergyTariffAtLocationShouldHaveACPricePerKWhAndDCPricePerKWh(String locationId, double expectedAc, double expectedDc) {
+        Tariff tariff = network.getEnergyTariffForLocation(locationId);
+        assertNotNull(tariff, "No energy tariff set for location " + locationId);
+
+        assertEquals(expectedAc, tariff.getPricePerKWhAC(), 0.0001);
+        assertEquals(expectedDc, tariff.getPricePerKWhDC(), 0.0001);
     }
 }
 
