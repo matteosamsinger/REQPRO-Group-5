@@ -12,8 +12,6 @@ public class ElectricChargingStationNetwork {
         locations.put(location.getId(), location);
     }
 
-
-
     public Location findLocation(String id) {
         return locations.get(id);
     }
@@ -29,10 +27,9 @@ public class ElectricChargingStationNetwork {
         }
         location.addCharger(charger);
     }
-    public void addClient(Client client) {
-        registerClient(client);
 
-    }
+
+
 
 
 
@@ -53,21 +50,6 @@ public class ElectricChargingStationNetwork {
         if (location != null) {
             location.removeChargerByNumber(number);
         }
-    }
-    public void setEnergyTariffForLocation(String locationId, Tariff tariff) {
-        Location location = findLocation(locationId);
-        if (location == null) {
-            throw new IllegalArgumentException("Location not found: " + locationId);
-        }
-        location.setEnergyTariff(tariff);
-    }
-
-    public Tariff getEnergyTariffForLocation(String locationId) {
-        Location location = findLocation(locationId);
-        if (location == null) {
-            throw new IllegalArgumentException("Location not found: " + locationId);
-        }
-        return location.getEnergyTariff();
     }
 
     public java.util.Collection<Location> getAllLocations() {
