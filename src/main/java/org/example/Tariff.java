@@ -82,4 +82,14 @@ public class Tariff {
         }
         throw new IllegalArgumentException("Unknown charger type: " + type);
     }
+    private Tariff energyTariff;
+
+    public Tariff getEnergyTariff() {
+        return energyTariff;
+    }
+
+    public void setEnergyTariff(Tariff energyTariff) {
+        this.energyTariff = energyTariff;
+    }
+
 }
