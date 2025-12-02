@@ -70,6 +70,9 @@ public class ElectricChargingStationNetwork {
         return location.getEnergyTariff();
     }
 
+    public java.util.Collection<Location> getAllLocations() {
+        return locations.values();
+    }
 
 }
 

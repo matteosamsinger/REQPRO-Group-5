@@ -15,14 +15,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.*;
 
+
 public class StepDefinitions {
+
 
     private ElectricChargingStationNetwork network;
     private Location lookedUpLocation;
     private Charger lookedUpCharger;
     private Client lookedUpClient;
+    private ChargingSession currentSession;
+    private Client currentClient;
+    private Charger currentCharger;
+    private java.util.List<Charger> lastNetworkStatus;
+
+    private Charger findChargerByNumber(String chargerNumber) {
+        for (Location loc : network.getAllLocations()) {
+            for (Charger charger : loc.getChargers()) {
+                if (charger.getNumber().equals(chargerNumber)) {
+                    return charger;
+                }
+            }
+        }
+        return null;
+    }
 
     @Given("an empty charging network")
     public void anEmptyChargingNetwork() {
