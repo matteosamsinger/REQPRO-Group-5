@@ -5,14 +5,6 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
-import java.time.LocalDate;
-import org.example.Client;
-import org.example.Account;
-import org.example.ElectricChargingStationNetwork;
-
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 import java.util.ArrayList;
@@ -205,102 +197,163 @@ public class StepDefinitions {
         network.removeChargerFromLocation(locationId, number);
     }
 
-    @When("I set an energy tariff at location {string} with AC price per kWh {double} EUR and DC price per kWh {double} EUR")
-    public void iSetAnEnergyTariffAtLocationWithACPricePerKWhEURAndDCPricePerKWhEUR( String locationId,
-                                                                                     double acPrice,
-                                                                                     double dcPrice) {
-        {
-            Location location = network.findLocation(locationId);
-            assertNotNull(location, "Location not found: " + locationId);
-
-            Tariff tariff = new Tariff(
-                    1,                // tariffId (erstmal fix)
-                    LocalDate.now(),  // validFrom
-                    acPrice,          // pricePerKWhAC
-                    0.0,              // pricePerMinuteAC
-                    dcPrice,          // pricePerKWhDC
-                    0.0,              // pricePerMinuteDC
-                    location          // location
-            );
-
-            network.setEnergyTariffForLocation(locationId, tariff);
-        }
-    }
-
-    @Then("the energy tariff at location {string} should have AC price per kWh {double} EUR and DC price per kWh {double} EUR")
-    public void theEnergyTariffAtLocationShouldHaveACPricePerKWhEURAndDCPricePerKWhEUR(String locationId,
-                                                                                       double expectedAcPrice,
-                                                                                       double expectedDcPrice) {
-        Tariff tariff = network.getEnergyTariffForLocation(locationId);
-        assertNotNull(tariff, "No energy tariff set for location " + locationId);
-
-        assertEquals(expectedAcPrice, tariff.getPricePerKWhAC(), 0.0001);
-        assertEquals(expectedDcPrice, tariff.getPricePerKWhDC(), 0.0001);
-    }
-
-    @And("I add a charging transaction of {int} EUR for client {string}")
-    public void iAddAChargingTransactionOfEURForClient(int amount, String clientId) {
+    @And("the account of client {string} has a balance of {double} EUR")
+    public void theAccountOfClientHasABalanceOfEur(String clientId, double amount) {
         Client client = network.findClient(clientId);
         assertNotNull(client, "Client not found: " + clientId);
 
         Account account = client.getAccount();
-        assertNotNull(account, "Client has no account: " + clientId);
+        assertNotNull(account, "Account for client not found: " + clientId);
 
-        int nextId = account.getTransactions().size() + 1;
+        // In unserem Background haben wir "empty account" → Balance sollte 0 sein:
+        assertEquals(0.0, account.getBalance(), 0.0001);
 
-        Transaction tx = new Transaction(
-                nextId,   // transactionId
-                nextId,   // positionNumber (kannst du später anders setzen, aber so ist es konsistent)
-                amount    // Betrag in EUR
-        );
-
-        account.debit(amount);
-        account.addTransaction(tx);
+        account.topUp(amount);
     }
 
 
-    @And("I request the invoice status for client {string}")
-    public void iRequestTheInvoiceStatusForClient(String clientId) {
-        Client client = network.findClient(clientId);
-        assertNotNull(client, "Client not found: " + clientId);
-        // keine weitere Logik nötig – ausgewertet wird im Then-Step
+    @When("I start a charging session for client {string} at charger {string} at {string}")
+    public void iStartAChargingSessionForClientAtChargerAt(String clientId, String chargerNumber, String startTimeText) {
+        currentClient = network.findClient(clientId);
+        assertNotNull(currentClient, "Client not found: " + clientId);
+
+        currentCharger = findChargerByNumber(chargerNumber);
+        assertNotNull(currentCharger, "Charger not found: " + chargerNumber);
+
+        java.time.LocalDateTime startTime = java.time.LocalDateTime.parse(startTimeText);
+
+        currentSession = new ChargingSession(1, currentClient, currentCharger, startTime);
+
+        // Charger ist jetzt im Status "CHARGING"
+        currentCharger.setStatus("CHARGING");
     }
 
 
-    @Then("the invoice for client {string} should contain {int} top-ups and {int} charging transaction")
-    public void theInvoiceForClientShouldContainTopUpsAndChargingTransaction(
-            String clientId,
-            int expectedTopUps,
-            int expectedTransactions
-    ) {
+    @And("I stop the charging session at {string} with energy {double} kWh and pricePerKWh {double} EUR")
+    public void iStopTheChargingSessionAtWithEnergyKWhAndPricePerKWhEur(String endTimeText, double energyKWh, double pricePerKWh) {
+        assertNotNull(currentSession, "No current charging session");
+
+        java.time.LocalDateTime endTime = java.time.LocalDateTime.parse(endTimeText);
+
+        // Session beenden und Preis berechnen
+        currentSession.stop(endTime, energyKWh, pricePerKWh);
+
+        // Betrag vom Account abbuchen
+        Account account = currentClient.getAccount();
+        account.debit(currentSession.getTotalPrice());
+
+        // Charger wieder verfügbar
+        currentCharger.setStatus("AVAILABLE");
+    }
+
+
+    @Then("the charging session should have a duration of {int} minutes")
+    public void theChargingSessionShouldHaveADurationOfMinutes(int expectedMinutes) {
+        assertNotNull(currentSession, "No current charging session");
+        assertEquals(expectedMinutes, currentSession.getDurationMinutes());
+    }
+
+
+    @And("the total price of the charging session should be {double} EUR")
+    public void theTotalPriceOfTheChargingSessionShouldBeEur(double expectedPrice) {
+        assertNotNull(currentSession, "No current charging session");
+        assertEquals(expectedPrice, currentSession.getTotalPrice(), 0.0001);
+    }
+
+
+    @And("the account balance of client {string} should be {double} EUR")
+    public void theAccountBalanceOfClientShouldBeEur(String clientId, double expectedBalance) {
         Client client = network.findClient(clientId);
         assertNotNull(client, "Client not found: " + clientId);
 
         Account account = client.getAccount();
-        assertNotNull(account, "Client has no account: " + clientId);
+        assertNotNull(account, "Account for client not found: " + clientId);
 
-        assertEquals(expectedTopUps, account.getTopUps().size());
-        assertEquals(expectedTransactions, account.getTransactions().size());
+        assertEquals(expectedBalance, account.getBalance(), 0.0001);
     }
-    @And("a client with id {string} name {string} and an account with balance {int} EUR exists")
-    public void aClientWithIdNameAndAnAccountWithBalanceEURExists(String clientId, String name, int balance) {
-        // Neues Konto mit Startsaldo
-        Account account = new Account();   // startet bei 0.0
 
-        if (balance > 0) {
-            account.topUp(balance);        // positives Startguthaben
-        } else if (balance < 0) {
-            account.debit(-balance);       // negativer Startstand (falls du das brauchst)
+
+    @And("the charger {string} at location {string} should be available again")
+    public void theChargerAtLocationShouldBeAvailableAgain(String chargerNumber, String locationId) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Charger charger = null;
+        for (Charger c : location.getChargers()) {
+            if (c.getNumber().equals(chargerNumber)) {
+                charger = c;
+                break;
+            }
+        }
+        assertNotNull(charger, "Charger not found at location: " + chargerNumber);
+
+        assertTrue(charger.isAvailable(), "Charger is not available");
+    }
+
+    @Given("charger {string} at location {string} is currently charging")
+    public void chargerAtLocationIsCurrentlyCharging(String chargerNumber, String locationId) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Charger charger = null;
+        for (Charger c : location.getChargers()) {
+            if (c.getNumber().equals(chargerNumber)) {
+                charger = c;
+                break;
+            }
+        }
+        assertNotNull(charger, "Charger not found: " + chargerNumber);
+
+        charger.setStatus("CHARGING");
+    }
+
+    @And("charger {string} at location {string} is available")
+    public void chargerAtLocationIsAvailable(String chargerNumber, String locationId) {
+        Location location = network.findLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        Charger charger = null;
+        for (Charger c : location.getChargers()) {
+            if (c.getNumber().equals(chargerNumber)) {
+                charger = c;
+                break;
+            }
+        }
+        assertNotNull(charger, "Charger not found: " + chargerNumber);
+
+        charger.setStatus("AVAILABLE");
+    }
+
+    @When("I request the network status")
+    public void iRequestTheNetworkStatus() {
+        lastNetworkStatus = new ArrayList<>();
+
+        for (Location loc : network.getAllLocations()) {
+            lastNetworkStatus.addAll(loc.getChargers());
+        }
+    }
+
+    @Then("I see {int} charger status entries")
+    public void iSeeChargerStatusEntries(int expectedCount) {
+        assertNotNull(lastNetworkStatus, "Network status was not requested yet");
+        assertEquals(expectedCount, lastNetworkStatus.size());
+    }
+
+    @And("one entry for charger {string} has status {string}")
+    public void oneEntryForChargerHasStatus(String chargerNumber, String expectedStatus) {
+        assertNotNull(lastNetworkStatus, "Network status was not requested yet");
+
+        boolean found = false;
+        for (Charger c : lastNetworkStatus) {
+            if (c.getNumber().equals(chargerNumber)
+                    && expectedStatus.equals(c.getStatus())) {
+                found = true;
+                break;
+            }
         }
 
-        // Client inkl. Account anlegen
-        Client client = new Client(clientId, name, "dummy@example.com", account);
-
-        // Im Netzwerk registrieren
-        network.addClient(client);
+        assertTrue(found,
+                "No charger " + chargerNumber + " with status " + expectedStatus + " found in network status");
     }
-
-
-
 }
 
