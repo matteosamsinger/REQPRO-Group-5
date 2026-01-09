@@ -3,6 +3,7 @@ package org.example;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 public class ElectricChargingStationNetwork {
 
@@ -103,7 +104,46 @@ public class ElectricChargingStationNetwork {
         return chargingManager.stopSession(sessionId, endTime, energyKWh);
     }
 
-    // Getter auf Manager, falls du sie irgendwo direkt brauchst:
+
+    public String toString() {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        sb.append("NETWORK STATUS @ ").append(now).append(nl);
+
+        for (Location loc : getAllLocations()) {
+            sb.append(nl)
+                    .append("Location: ").append(loc.getId())
+                    .append(" | ").append(loc.getName())
+                    .append(" | ").append(loc.getAddress())
+                    .append(nl);
+
+            Tariff t = loc.getTariffAt(now);
+
+            sb.append("  Current prices:").append(nl);
+            sb.append("    AC: ")
+                    .append(String.format(Locale.US, "%.3f", t.getPricePerKWh(ChargerType.AC))).append(" €/kWh, ")
+                    .append(String.format(Locale.US, "%.3f", t.getPricePerMinute(ChargerType.AC))).append(" €/min")
+                    .append(nl);
+            sb.append("    DC: ")
+                    .append(String.format(Locale.US, "%.3f", t.getPricePerKWh(ChargerType.DC))).append(" €/kWh, ")
+                    .append(String.format(Locale.US, "%.3f", t.getPricePerMinute(ChargerType.DC))).append(" €/min")
+                    .append(nl);
+
+            sb.append("  Chargers:").append(nl);
+            for (Charger c : loc.getChargers()) {
+                sb.append("    - #").append(c.getNumber())
+                        .append(" | ").append(c.getType())
+                        .append(" | ").append(c.getStatus())
+                        .append(nl);
+            }
+        }
+        return sb.toString();
+    }
+
+    // Getter auf Manager
     public LocationManager getLocationManager() {
         return locationManager;
     }

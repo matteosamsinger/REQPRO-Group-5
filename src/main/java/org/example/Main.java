@@ -20,6 +20,13 @@ public class Main {
                 0.49, 0.05,   // AC: €/kWh, €/minute
                 0.59, 0.10    // DC: €/kWh, €/minute
         );
+
+        Tariff tariff2 = new Tariff(
+                2,
+                LocalDateTime.now().minusHours(2),
+                0.99, 0.08,   // AC: €/kWh, €/minute
+                0.99, 0.11    // DC: €/kWh, €/minute
+        );
         network.setEnergyTariffForLocation("LOC-001", tariff1);
 
         // --- Add Charger ---
@@ -35,6 +42,7 @@ public class Main {
         // --- Create & Register Account (replaces Client) ---
         Account account = new Account("A-001", "Alice", "alice@example.com");
         network.registerAccount(account);
+
 
         // --- Top up ---
         account.topUpAccountWithMoney(50.0);
@@ -60,6 +68,9 @@ public class Main {
                 start.plusMinutes(30),
                 12.5
         );
+
+
+
 
         System.out.println("\nSession finished:");
         System.out.println(" - durationMinutes=" + finished.getDurationMinutes());
@@ -87,5 +98,47 @@ public class Main {
                     + " | amount=" + tx.getAmount() + " EUR"
                     + " | time=" + tx.getStartTime());
         }
+
+        System.out.println("jetzt kommt rechnung\n\n\n");
+
+        System.out.println(account.toInvoiceString());
+
+        System.out.println("\n\n\n\n");
+        Location hq2 = new Location("LOC-002", "Headquarters", "HQ Street 1");
+        Location hq3 = new Location("LOC-003", "Headquarters", "HQ Street 1");
+        Location hq4 = new Location("LOC-004", "Headquarters", "HQ Street 1");
+        Location hq5 = new Location("LOC-005", "Headquarters", "HQ Street 1");
+
+
+
+        network.addLocation(hq2);
+        network.addLocation(hq3);
+        network.addLocation(hq4);
+        network.addLocation(hq5);
+
+
+        network.setEnergyTariffForLocation("LOC-002", tariff2);
+        network.setEnergyTariffForLocation("LOC-003", tariff2);
+        network.setEnergyTariffForLocation("LOC-004", tariff2);
+        network.setEnergyTariffForLocation("LOC-005", tariff2);
+
+        // --- Add Charger ---
+        Charger charger2 = new Charger(
+                2,
+                "1",
+                ChargerType.AC,
+                22,
+                hq
+        );
+        network.addChargerToLocation("LOC-002", charger2);
+        charger2.setStatus(ChargerStatus.OUT_OF_ORDER);
+
+
+        System.out.println(network.toString());
+
+
+
+
     }
+
 }

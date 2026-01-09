@@ -63,10 +63,25 @@ public class ChargingManager {
 
         account.debit(amount);
 
-        // Optional: Transaction anlegen (positionNumber kann z.B. sessionId sein)
+        // Transaction anlegen (positionNumber kann z.B. sessionId sein)
         int txId = account.getTransactions().size() + 1;
         Transaction tx = new Transaction(txId, sessionId, amount);
         account.addTransaction(tx);
+
+        // Rechnungsposten hinzufügen
+        int nextPos = account.getInvoiceItems().size() + 1;
+        InvoiceLineItem item = new InvoiceLineItem(
+                nextPos,
+                session.getStartTime(),
+                session.getCharger().getLocation().getName(),
+                session.getCharger().getNumber(),
+                session.getCharger().getType(),
+                session.getDurationMinutes(),
+                session.getEnergyKWh(),
+                session.getTotalPrice()
+        );
+        account.addInvoiceItem(item);
+
 
         // Charger wieder freigeben
         session.getCharger().setStatus(ChargerStatus.AVAILABLE);

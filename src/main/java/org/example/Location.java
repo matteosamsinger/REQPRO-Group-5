@@ -39,6 +39,14 @@ public class Location {
     }
 
     public void addCharger(Charger charger) {
+        for (Charger c : chargers) {
+            if (c.getChargerId() == charger.getChargerId()) {
+                throw new IllegalArgumentException("ChargerId already exists at location " + id + ": " + charger.getChargerId());
+            }
+            if (c.getNumber().equals(charger.getNumber())) {
+                throw new IllegalArgumentException("Charger number already exists at location " + id + ": " + charger.getNumber());
+            }
+        }
         chargers.add(charger);
     }
 

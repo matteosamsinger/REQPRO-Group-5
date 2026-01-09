@@ -1,8 +1,8 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class Account {
 
@@ -13,6 +13,8 @@ public class Account {
     private double balance;
     private final List<Transaction> transactions = new ArrayList<>();
     private final List<TopUp> topUps = new ArrayList<>();
+
+    private final List<InvoiceLineItem> invoiceItems = new ArrayList<>();
 
     public Account(String accountId, String name, String email) {
         this.accountId = accountId;
@@ -42,6 +44,16 @@ public class Account {
 
     public double getBalance() {
         return balance;
+    }
+
+    // --- Invoice ---
+
+    public void addInvoiceItem(InvoiceLineItem item) {
+        invoiceItems.add(item);
+    }
+
+    public List<InvoiceLineItem> getInvoiceItems() {
+        return Collections.unmodifiableList(invoiceItems);
     }
 
     // --- History ---
@@ -92,5 +104,61 @@ public class Account {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+
+    public String toInvoiceString() {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"/*"dd.MM.yyyy HH:mm"*/);
+        String nl = System.lineSeparator();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("INVOICE STATUS").append(nl);
+        sb.append("Account: ").append(accountId)
+                .append(" | ").append(name)
+                .append(" | ").append(email).append(nl);
+        sb.append("Generated: ").append(LocalDateTime.now().format(fmt)).append(nl);
+        sb.append(nl);
+
+        // 1) Rechnungsposten (Ladevorgänge) sortiert nach Startzeit
+        sb.append("CHARGING ITEMS (sorted by start time)").append(nl);
+
+        if (invoiceItems.isEmpty()) {
+            sb.append("  (none)").append(nl);
+        } else {
+            invoiceItems.stream()
+                    .sorted(Comparator.comparing(InvoiceLineItem::getStartTime))
+                    .forEach(item -> sb.append("  ")
+                            .append(item.getPositionNumber()).append(". ")
+                            .append(item.getStartTime().format(fmt))
+                            .append(" | ").append(item.getLocationName())
+                            .append(" | charger ").append(item.getChargerNumber())
+                            .append(" | ").append(item.getMode())
+                            .append(" | ").append(item.getDurationMinutes()).append(" min")
+                            .append(" | ").append(String.format(Locale.US, "%.2f", item.getEnergyKWh())).append(" kWh")
+                            .append(" | ").append(String.format(Locale.US, "%.2f", item.getPriceEur())).append(" EUR")
+                            .append(nl));
+        }
+
+        sb.append(nl);
+
+        // 2) TopUps
+        sb.append("TOP-UPS").append(nl);
+        if (topUps.isEmpty()) {
+            sb.append("  (none)").append(nl);
+        } else {
+            for (TopUp t : topUps) {
+                sb.append("  #").append(t.getTopUpId())
+                        .append(" | ").append(t.getTime().format(fmt))
+                        .append(" | +").append(String.format(Locale.US, "%.2f", t.getAmount())).append(" EUR")
+                        .append(nl);
+            }
+        }
+
+        sb.append(nl);
+
+        // 3) Offenes Guthaben
+        sb.append("OPEN BALANCE: ").append(String.format(Locale.US, "%.2f", balance)).append(" EUR").append(nl);
+
+        return sb.toString();
     }
 }
