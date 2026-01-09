@@ -6,31 +6,37 @@ import java.time.LocalDateTime;
 public class ChargingSession {
 
     private final int sessionId;
-    private final Client client;
+    private final Account account;
     private final Charger charger;
 
     private final LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private final double pricePerKWhAtStart;
+    private final double pricePerMinuteAtStart;
 
+    private LocalDateTime endTime;
     private double energyKWh;
     private long durationMinutes;
     private double totalPrice;
 
-    public ChargingSession(int sessionId, Client client, Charger charger, LocalDateTime startTime) {
+    public ChargingSession(int sessionId, Account account, Charger charger,
+                           LocalDateTime startTime, double pricePerKWhAtStart, double pricePerMinuteAtStart) {
         this.sessionId = sessionId;
-        this.client = client;
+        this.account = account;
         this.charger = charger;
         this.startTime = startTime;
+        this.pricePerKWhAtStart = pricePerKWhAtStart;
+        this.pricePerMinuteAtStart = pricePerMinuteAtStart;
     }
 
     /**
      * Beendet die Session, berechnet Dauer und Gesamtpreis.
      */
-    public void stop(LocalDateTime endTime, double energyKWh, double pricePerKWh) {
+    public void stop(LocalDateTime endTime, double energyKWh) {
         this.endTime = endTime;
         this.energyKWh = energyKWh;
         this.durationMinutes = calculateDurationMinutesInternal();
-        this.totalPrice = energyKWh * pricePerKWh;
+
+        this.totalPrice = (energyKWh * pricePerKWhAtStart) + (durationMinutes * pricePerMinuteAtStart);
     }
 
     private long calculateDurationMinutesInternal() {
@@ -40,16 +46,13 @@ public class ChargingSession {
         return Duration.between(startTime, endTime).toMinutes();
     }
 
-    public long getDurationMinutes() {
-        return durationMinutes;
+
+    public int getSessionId() {
+        return sessionId;
     }
 
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
-    public Client getClient() {
-        return client;
+    public Account getAccount() {
+        return account;
     }
 
     public Charger getCharger() {
@@ -68,8 +71,21 @@ public class ChargingSession {
         return energyKWh;
     }
 
-    public int getSessionId() {
-        return sessionId;
+    public long getDurationMinutes() {
+        return durationMinutes;
+    }
+
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
+
+    public double getPricePerKWhAtStart() {
+        return pricePerKWhAtStart;
+    }
+
+    public double getPricePerMinuteAtStart() {
+        return pricePerMinuteAtStart;
     }
 }
 

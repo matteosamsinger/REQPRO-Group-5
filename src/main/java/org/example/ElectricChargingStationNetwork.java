@@ -1,14 +1,15 @@
 package org.example;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
 public class ElectricChargingStationNetwork {
 
     private final LocationManager locationManager = new LocationManager();
-    private final ClientManager clientManager = new ClientManager();
+    private final AccountManager accountManager = new AccountManager();
     private final ChargingManager chargingManager =
-            new ChargingManager(locationManager, clientManager);
+            new ChargingManager(locationManager, accountManager);
 
     // --- Location-bezogene Methoden ---
 
@@ -36,10 +37,18 @@ public class ElectricChargingStationNetwork {
         locationManager.removeChargerFromLocation(locationId, number);
     }
 
+    /**
+     * Fügt einen (neuen) Tarif für einen Standort hinzu.
+     * Tarife können mehrmals pro Tag wechseln -> daher "add" statt "replace".
+     */
     public void setEnergyTariffForLocation(String locationId, Tariff tariff) {
         locationManager.setEnergyTariffForLocation(locationId, tariff);
     }
 
+    /**
+     * Gibt den aktuell gültigen Tarif (jetzt) für den Standort zurück.
+     * Optional, falls du das brauchst.
+     */
     public Tariff getEnergyTariffForLocation(String locationId) {
         return locationManager.getEnergyTariffForLocation(locationId);
     }
@@ -49,28 +58,49 @@ public class ElectricChargingStationNetwork {
         return locationManager.toString();
     }
 
-    // --- Client-bezogene Methoden ---
+    // --- Account-bezogene Methoden ---
 
-    public void registerClient(Client client) {
-        clientManager.registerClient(client);
+    public void registerAccount(Account account) {
+        accountManager.registerAccount(account);
     }
 
-    public void addClient(Client client) {
-        clientManager.registerClient(client);
+    public void addClient(Account account) {
+        accountManager.registerAccount(account);
     }
 
-    public Client findClient(String clientId) {
-        return clientManager.findClient(clientId);
+    public Account findAccount(String accountId) {
+        return accountManager.findAccount(accountId);
     }
 
-    public void deleteClient(String clientId) {
-        clientManager.deleteClient(clientId);
+    public void deleteAccount(String accountId) {
+        accountManager.deleteAccount(accountId);
     }
 
-    // --- Charging-bezogene Methoden (falls du sie nutzen willst) ---
+    // --- Charging-bezogene Methoden ---
 
     public List<Charger> getNetworkStatus() {
         return chargingManager.getNetworkStatus();
+    }
+
+    /**
+     * Startet eine Ladesession.
+     * Wichtig: der Tarif wird zum Startzeitpunkt ermittelt und in der Session gespeichert (Snapshot).
+     */
+    public ChargingSession startChargingSession(String accountId,
+                                                String locationId,
+                                                String chargerNumber,
+                                                LocalDateTime startTime) {
+        return chargingManager.startSession(accountId, locationId, chargerNumber, startTime);
+    }
+
+    /**
+     * Stoppt eine Ladesession, berechnet den Preis (kWh + Minuten) mit den Startpreisen
+     * und bucht den Betrag vom Account ab.
+     */
+    public ChargingSession stopChargingSession(int sessionId,
+                                               LocalDateTime endTime,
+                                               double energyKWh) {
+        return chargingManager.stopSession(sessionId, endTime, energyKWh);
     }
 
     // Getter auf Manager, falls du sie irgendwo direkt brauchst:
@@ -78,8 +108,8 @@ public class ElectricChargingStationNetwork {
         return locationManager;
     }
 
-    public ClientManager getClientManager() {
-        return clientManager;
+    public AccountManager getAccountManager() {
+        return accountManager;
     }
 
     public ChargingManager getChargingManager() {

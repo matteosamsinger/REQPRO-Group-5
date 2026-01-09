@@ -1,66 +1,91 @@
 package org.example;
 
+import java.time.LocalDateTime;
 
 public class Main {
 
     public static void main(String[] args) {
         System.out.println("Starting EV Charging Network Demo...");
 
-        // Owner = Betreiber des Netzes (hier nur implizit, über das Network-Objekt)
         ElectricChargingStationNetwork network = new ElectricChargingStationNetwork();
 
-        // --- Create Location (Glossary: Create Location) ---
+        // --- Create Location ---
         Location hq = new Location("LOC-001", "Headquarters", "HQ Street 1");
         network.addLocation(hq);
 
-        // --- Add Charger (Glossary: Add Charger) ---
+        // --- Add Tariff for Location (validFrom includes time) ---
+        Tariff tariff1 = new Tariff(
+                1,
+                LocalDateTime.now().minusHours(2),
+                0.49, 0.05,   // AC: €/kWh, €/minute
+                0.59, 0.10    // DC: €/kWh, €/minute
+        );
+        network.setEnergyTariffForLocation("LOC-001", tariff1);
+
+        // --- Add Charger ---
         Charger charger1 = new Charger(
-                1,      // internal chargerId
-                "1",    // charger number
-                "AC",   // mode / type: AC or DC (Glossary: Select Mode)
-                22,     // max power in kW
+                1,
+                "1",
+                ChargerType.AC,
+                22,
                 hq
         );
         network.addChargerToLocation("LOC-001", charger1);
 
-        // --- Register Account (Glossary: Register AcYcount / Customer) ---
-        Account account = new Account();
-        Client customer = new Client("C-001", "Alice", "alice@example.com", account);
-        network.registerClient(customer);
+        // --- Create & Register Account (replaces Client) ---
+        Account account = new Account("A-001", "Alice", "alice@example.com");
+        network.registerAccount(account);
 
-        // --- Top Up Account with Money (Glossary) ---
+        // --- Top up ---
         account.topUpAccountWithMoney(50.0);
 
-        // --- Output demo state ---
-
-        System.out.println("\nLocations in charging network:");
-        Location foundLoc = network.findLocation("LOC-001");
-        if (foundLoc != null) {
-            System.out.println(" - Location " + foundLoc.getId()
-                    + " | name=" + foundLoc.getName()
-                    + " | address=" + foundLoc.getAddress());
-            System.out.println("   Chargers at this location: " + foundLoc.getChargers().size());
-            if (!foundLoc.getChargers().isEmpty()) {
-                Charger c = foundLoc.getChargers().get(0);
-                System.out.println("   -> Charger number " + c.getNumber()
-                        + " | mode=" + c.getType()
-                        + " | maxPower=" + c.getMaxPowerKw() + " kW");
-            }
+        // --- Output state ---
+        System.out.println("\nAccounts in charging network:");
+        Account found = network.findAccount("A-001");
+        if (found != null) {
+            System.out.println(" - Account " + found.getAccountId()
+                    + " | name=" + found.getName()
+                    + " | email=" + found.getEmail());
+            System.out.println("   Balance: " + found.getAccountBalance() + " EUR");
+            System.out.println("   Top-ups: " + found.getBalanceTopUps().size());
         }
 
-        System.out.println("\nCustomers in charging network:");
-        Client foundCustomer = network.findClient("C-001");
-        if (foundCustomer != null) {
-            System.out.println(" - Customer " + foundCustomer.getClientId()
-                    + " | name=" + foundCustomer.getName()
-                    + " | email=" + foundCustomer.getEmail());
-            System.out.println("   Account balance (prepaid credit): "
-                    + foundCustomer.getAccount().getAccountBalance() + " EUR");
-            System.out.println("   List of balance top-ups: "
-                    + foundCustomer.getAccount().getBalanceTopUps().size() + " top-ups");
-        }
+        // --- Start session ---
+        LocalDateTime start = LocalDateTime.now();
+        ChargingSession session = network.startChargingSession("A-001", "LOC-001", "1", start);
+
+        // simulate stop after 30 min + 12.5 kWh
+        ChargingSession finished = network.stopChargingSession(
+                session.getSessionId(),
+                start.plusMinutes(30),
+                12.5
+        );
+
+        System.out.println("\nSession finished:");
+        System.out.println(" - durationMinutes=" + finished.getDurationMinutes());
+        System.out.println(" - energyKWh=" + finished.getEnergyKWh());
+        System.out.println(" - totalPrice=" + finished.getTotalPrice() + " EUR");
+
+        System.out.println("\nBalance after charging:");
+        System.out.println(" - " + account.getAccountBalance() + " EUR");
 
         System.out.println("\nDemo finished.");
+
+        account.topUp(100);
+
+        System.out.println("\nTop-ups:");
+        for (TopUp t : account.getTopUps()) {
+            System.out.println(" - #" + t.getTopUpId()
+                    + " | time=" + t.getTime()
+                    + " | amount=" + t.getAmount() + " EUR");
+        }
+
+        System.out.println("\nTransactions:");
+        for (Transaction tx : account.getTransactions()) {
+            System.out.println(" - txId=" + tx.getTransactionId()
+                    + " | position=" + tx.getPositionNumber()
+                    + " | amount=" + tx.getAmount() + " EUR"
+                    + " | time=" + tx.getStartTime());
+        }
     }
 }
-

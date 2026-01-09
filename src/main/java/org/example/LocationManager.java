@@ -1,5 +1,6 @@
 package org.example;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class LocationManager {
         if (location == null) {
             throw new IllegalArgumentException("Location not found: " + locationId);
         }
-        location.setEnergyTariff(tariff);
+        location.addTariff(tariff);
     }
 
     public Tariff getEnergyTariffForLocation(String locationId) {
@@ -52,7 +53,7 @@ public class LocationManager {
         if (location == null) {
             throw new IllegalArgumentException("Location not found: " + locationId);
         }
-        return location.getEnergyTariff();
+        return location.getTariffAt(LocalDateTime.now());
     }
 
     @Override

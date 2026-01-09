@@ -4,18 +4,18 @@ public class Charger {
 
     private final int chargerId;
     private String number;
-    private String type;
+    private ChargerType type;
     private int maxPowerKw;
     private Location location;
-    private String status;
+    private ChargerStatus status;
 
-    public Charger(int chargerId, String number, String type, int maxPowerKw, Location location) {
+    public Charger(int chargerId, String number, ChargerType type, int maxPowerKw, Location location) {
         this.chargerId = chargerId;
         this.number = number;
         this.type = type;
         this.maxPowerKw = maxPowerKw;
         this.location = location;
-        this.status = "AVAILABLE"; // Standard: verfügbar
+        this.status = ChargerStatus.AVAILABLE; // Standard: verfügbar
     }
 
     public int getChargerId() {
@@ -26,7 +26,7 @@ public class Charger {
         return number;
     }
 
-    public String getType() {
+    public ChargerType getType() {
         return type;
     }
 
@@ -42,16 +42,16 @@ public class Charger {
         this.location = location;
     }
 
-    public String getStatus() {
+    public ChargerStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ChargerStatus status) {
         this.status = status;
     }
 
     public boolean isAvailable() {
-        return "AVAILABLE".equals(status);
+        return status == ChargerStatus.AVAILABLE;
     }
 }
 

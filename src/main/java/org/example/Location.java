@@ -1,6 +1,8 @@
 package org.example;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Location {
@@ -8,7 +10,7 @@ public class Location {
     private final String id;
     private String name;
     private final String address;
-    private Tariff energyTariff;
+    //private Tariff energyTariff;
 
 
     private final List<Charger> chargers = new ArrayList<>();
@@ -46,33 +48,34 @@ public class Location {
 
     public Charger findChargerByNumber(String number) {
         for (Charger charger : chargers) {
-            if (charger.getNumber().equals(number)) {
-                return charger;
-            }
+            if (charger.getNumber().equals(number)) return charger;
         }
         return null;
     }
 
+    public void removeChargerByNumber(String number) {
+        chargers.removeIf(c -> c.getNumber().equals(number));
+    }
+
     public void addTariff(Tariff tariff) {
         tariffs.add(tariff);
+        tariffs.sort(Comparator.comparing(Tariff::getValidFrom));
     }
 
     public List<Tariff> getTariffs() {
         return new ArrayList<>(tariffs);
     }
 
-    public void removeChargerByNumber(String number) {
-        chargers.removeIf(c -> c.getNumber().equals(number));
+    public Tariff getTariffAt(LocalDateTime time) {
+        Tariff best = null;
+        for (Tariff t : tariffs) {
+            if (!t.getValidFrom().isAfter(time)) {
+                best = t; // da sortiert: best wird immer "letzter gültiger"
+            }
+        }
+        if (best == null) {
+            throw new IllegalStateException("No tariff defined for location " + id + " at " + time);
+        }
+        return best;
     }
-    public Tariff getEnergyTariff() {
-        return energyTariff;
-    }
-
-    public void setEnergyTariff(Tariff energyTariff) {
-        this.energyTariff = energyTariff;
-    }
-
-
 }
-
-
