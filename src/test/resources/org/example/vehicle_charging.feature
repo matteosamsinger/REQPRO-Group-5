@@ -9,6 +9,7 @@ Feature: Vehicle charging
     And a charger with number "1" type "AC" and max power 22 kW at location "LOC-001" exists
     And a client with id "C-001" name "Alice" and email "alice@example.com" and an empty account exists
     And the account of client "C-001" has a balance of 20 EUR
+    And I set an energy tariff at location "LOC-001" with AC price per kWh 0.35 EUR and DC price per kWh 0.60 EUR
 
   Scenario: Start and stop an AC charging session and bill the customer
     When I start a charging session for client "C-001" at charger "1" at "2025-02-01T10:00"

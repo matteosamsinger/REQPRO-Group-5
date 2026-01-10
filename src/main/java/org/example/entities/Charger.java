@@ -1,21 +1,22 @@
-package org.example;
+package org.example.entities;
+
+import org.example.enums.ChargerStatus;
+import org.example.enums.ChargerType;
 
 public class Charger {
 
     private final int chargerId;
     private String number;
-    private String type;
-    private int maxPowerKw;
+    private ChargerType type;
     private Location location;
-    private String status;
+    private ChargerStatus status;
 
-    public Charger(int chargerId, String number, String type, int maxPowerKw, Location location) {
+    public Charger(int chargerId, String number, ChargerType type) {
         this.chargerId = chargerId;
         this.number = number;
         this.type = type;
-        this.maxPowerKw = maxPowerKw;
         this.location = location;
-        this.status = "AVAILABLE"; // Standard: verfügbar
+        this.status = ChargerStatus.AVAILABLE; // Standard: verfügbar
     }
 
     public int getChargerId() {
@@ -26,12 +27,8 @@ public class Charger {
         return number;
     }
 
-    public String getType() {
+    public ChargerType getType() {
         return type;
-    }
-
-    public int getMaxPowerKw() {
-        return maxPowerKw;
     }
 
     public Location getLocation() {
@@ -42,16 +39,16 @@ public class Charger {
         this.location = location;
     }
 
-    public String getStatus() {
+    public ChargerStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ChargerStatus status) {
         this.status = status;
     }
 
     public boolean isAvailable() {
-        return "AVAILABLE".equals(status);
+        return status == ChargerStatus.AVAILABLE;
     }
 }
 
