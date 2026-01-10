@@ -1,4 +1,6 @@
-package org.example;
+package org.example.managers;
+
+import org.example.entities.Account;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,19 +10,23 @@ public class AccountManager {
 
     private final Map<String, Account> accounts = new HashMap<>();
 
-    public void registerAccount(Account account) {
+    //create
+    public void createAccount(Account account) {
         accounts.put(account.getAccountId(), account);
     }
 
-    public Account findAccount(String accountId) {
+    //read
+    public Account readAccount(String accountId) {
         return accounts.get(accountId);
+    }
+
+    public Collection<Account> readAllAccounts() {
+        return accounts.values();
     }
 
     public void deleteAccount(String accountId) {
         accounts.remove(accountId);
     }
 
-    public Collection<Account> getAllAccounts() {
-        return accounts.values();
-    }
+
 }

@@ -1,6 +1,7 @@
-package org.example;
+package org.example.entities;
 
-import java.time.LocalDate;
+import org.example.enums.ChargerType;
+
 import java.time.LocalDateTime;
 
 public class Tariff {

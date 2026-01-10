@@ -1,4 +1,7 @@
-package org.example;
+package org.example.app;
+
+import org.example.entities.*;
+import org.example.enums.ChargerType;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +14,7 @@ public class Main {
 
         // --- Create Location ---
         Location hq = new Location("LOC-001", "Headquarters", "HQ Street 1");
-        network.addLocation(hq);
+        network.createLocation(hq);
 
         // --- Add Tariff for Location (validFrom includes time) ---
         Tariff tariff1 = new Tariff(
@@ -20,7 +23,7 @@ public class Main {
                 0.49, 0.05,   // AC: €/kWh, €/minute
                 0.59, 0.10    // DC: €/kWh, €/minute
         );
-        network.setEnergyTariffForLocation("LOC-001", tariff1);
+        network.createTariffForLocation("LOC-001", tariff1);
 
         // --- Add Charger ---
         Charger charger1 = new Charger(
@@ -34,13 +37,15 @@ public class Main {
 
         // --- Create & Register Account (replaces Client) ---
         Account account = new Account("A-001", "Alice", "alice@example.com");
-        network.registerAccount(account);
+        Account account2 = new Account("A-002", "Alice", "alice@example.com");
+        network.createAccount(account);
+        network.createAccount(account2);
 
         // --- Top up ---
         account.topUpAccountWithMoney(50.0);
 
         // --- Output state ---
-        System.out.println("\nAccounts in charging network:");
+        /*System.out.println("\nAccounts in charging network:");
         Account found = network.findAccount("A-001");
         if (found != null) {
             System.out.println(" - Account " + found.getAccountId()
@@ -48,7 +53,10 @@ public class Main {
                     + " | email=" + found.getEmail());
             System.out.println("   Balance: " + found.getAccountBalance() + " EUR");
             System.out.println("   Top-ups: " + found.getBalanceTopUps().size());
-        }
+        }*/
+        System.out.println(network.toString());
+
+
 
         // --- Start session ---
         LocalDateTime start = LocalDateTime.now();

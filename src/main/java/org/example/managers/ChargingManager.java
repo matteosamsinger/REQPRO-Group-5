@@ -1,4 +1,7 @@
-package org.example;
+package org.example.managers;
+
+import org.example.entities.*;
+import org.example.enums.ChargerStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,20 +23,20 @@ public class ChargingManager {
     }
 
     public ChargingSession startSession(String accountId, String locationId, String chargerNumber, LocalDateTime startTime) {
-        Account account = accountManager.findAccount(accountId);
+        Account account = accountManager.readAccount(accountId);
         if (account == null) throw new IllegalArgumentException("Account not found: " + accountId);
 
-        Location location = locationManager.findLocation(locationId);
+        Location location = locationManager.readLocation(locationId);
         if (location == null) throw new IllegalArgumentException("Location not found: " + locationId);
 
-        Charger charger = location.findChargerByNumber(chargerNumber);
+        Charger charger = location.readChargerByNumber(chargerNumber);
         if (charger == null) throw new IllegalArgumentException("Charger not found: " + chargerNumber);
 
         if (!charger.isAvailable()) {
             throw new IllegalStateException("Charger not available: " + chargerNumber);
         }
 
-        Tariff tariff = location.getTariffAt(startTime);
+        Tariff tariff = location.readTariffAt(startTime);
         double pricePerKWh = tariff.getPricePerKWh(charger.getType());
         double pricePerMin = tariff.getPricePerMinute(charger.getType());
 
@@ -77,8 +80,8 @@ public class ChargingManager {
 
     public List<Charger> getNetworkStatus() {
         List<Charger> result = new ArrayList<>();
-        for (Location loc : locationManager.getAllLocations()) {
-            result.addAll(loc.getChargers());
+        for (Location loc : locationManager.readAllLocations()) {
+            result.addAll(loc.readChargers());
         }
         return result;
     }

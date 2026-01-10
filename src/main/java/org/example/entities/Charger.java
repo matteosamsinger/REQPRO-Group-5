@@ -1,4 +1,7 @@
-package org.example;
+package org.example.entities;
+
+import org.example.enums.ChargerStatus;
+import org.example.enums.ChargerType;
 
 public class Charger {
 
