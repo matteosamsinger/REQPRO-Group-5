@@ -12,6 +12,9 @@ public class AccountManager {
 
     //create
     public void createAccount(Account account) {
+        if (accounts.containsKey(account.getAccountId())) {
+            throw new IllegalArgumentException("Account already exists: " + account.getAccountId());
+        }
         accounts.put(account.getAccountId(), account);
     }
 

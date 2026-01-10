@@ -37,6 +37,7 @@ public class ChargingSession {
         this.durationMinutes = calculateDurationMinutesInternal();
 
         this.totalPrice = (energyKWh * pricePerKWhAtStart) + (durationMinutes * pricePerMinuteAtStart);
+        this.totalPrice = Math.round(this.totalPrice * 100.0) / 100.0;
     }
 
     private long calculateDurationMinutesInternal() {

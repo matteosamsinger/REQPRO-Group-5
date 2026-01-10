@@ -1,8 +1,7 @@
 package org.example.entities;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class Account {
 
@@ -11,7 +10,8 @@ public class Account {
     private String email;
 
     private double balance;
-    private final List<Transaction> transactions = new ArrayList<>();
+    private final List<InvoiceLineItem> invoiceItems = new ArrayList<>();
+
     private final List<TopUp> topUps = new ArrayList<>();
 
     public Account(String accountId, String name, String email) {
@@ -44,33 +44,22 @@ public class Account {
         return balance;
     }
 
-    // --- History ---
+    // --- Invoice items
 
-    public void addTransaction(Transaction transaction) {
-        transactions.add(transaction);
+    public void createInvoiceLineItem(InvoiceLineItem item) {
+        invoiceItems.add(item);
     }
 
-    public List<Transaction> getTransactions() {
-        return Collections.unmodifiableList(transactions);
+    public List<InvoiceLineItem> getInvoiceLineItems() {
+        return Collections.unmodifiableList(invoiceItems);
     }
+
+    // --- TopUps
 
     public List<TopUp> getTopUps() {
         return Collections.unmodifiableList(topUps);
     }
 
-    // --- Convenience Methoden
-
-    public void topUpAccountWithMoney(double amount) {
-        topUp(amount);
-    }
-
-    public double getAccountBalance() {
-        return getBalance();
-    }
-
-    public List<TopUp> getBalanceTopUps() {
-        return getTopUps();
-    }
 
     // --- “Client-Daten” jetzt im Account ---
 
@@ -92,5 +81,65 @@ public class Account {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    // Invoice
+
+    public String toInvoiceString() {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        sb.append("INVOICE for Account ").append(accountId)
+                .append(" | name=").append(name)
+                .append(" | email=").append(email).append(nl);
+
+        sb.append(nl).append("Charging invoice items (sorted by start time):").append(nl);
+
+        List<InvoiceLineItem> items = new ArrayList<>(invoiceItems);
+        items.sort(Comparator.comparing(InvoiceLineItem::getStartTime));
+
+        if (items.isEmpty()) {
+            sb.append("  (none)").append(nl);
+        } else {
+            sb.append(String.format(
+                    "%-4s %-16s %-18s %-7s %-4s %5s %7s %10s%n",
+                    "Pos", "Start", "Location", "Charger", "Mode", "Min", "kWh", "Price(EUR)"
+            ));
+            sb.append("--------------------------------------------------------------------------").append(nl);
+
+            int pos = 1;
+            for (InvoiceLineItem it : items) {
+                sb.append(String.format(Locale.US,
+                        "%-4d %-16s %-18.18s %-7s %-4s %5d %7.2f %10.2f%n",
+                        pos++,
+                        it.getStartTime().format(dtf),
+                        it.getLocationName(),          // wird auf 18 Zeichen gekürzt
+                        it.getChargerNumber(),
+                        it.getMode(),
+                        it.getDurationMinutes(),
+                        it.getEnergyKWh(),
+                        it.getPriceEur()
+                ));
+            }
+        }
+
+        sb.append(nl).append("Top-ups:").append(nl);
+        if (topUps.isEmpty()) {
+            sb.append("  (none)").append(nl);
+        } else {
+            for (TopUp t : topUps) {
+                sb.append(String.format(Locale.US,
+                        "  - #%d | %s | %.2f EUR%n",
+                        t.getTopUpId(),
+                        t.getTime().format(dtf),
+                        t.getAmount()
+                ));
+            }
+        }
+
+        sb.append(nl).append(String.format(Locale.US, "Current balance: %.2f EUR%n", balance));
+        return sb.toString();
     }
 }

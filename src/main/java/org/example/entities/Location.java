@@ -76,11 +76,19 @@ public class Location {
 
     //Create
     public void createCharger(Charger charger) {
+        if (charger == null) {
+            throw new IllegalArgumentException("Charger must not be null");
+        }
+
         if (readChargerByNumber(charger.getNumber()) != null) {
             throw new IllegalArgumentException(
                     "Charger number already exists at location " + id + ": " + charger.getNumber()
             );
         }
+
+        // Beziehung setzen (damit charger.getLocation() später stimmt)
+        charger.setLocation(this);
+
         chargers.add(charger);
     }
 
