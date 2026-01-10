@@ -14,7 +14,9 @@ public class Main {
 
         // --- Create Location ---
         Location hq = new Location("LOC-001", "Headquarters", "HQ Street 1");
+        Location hq2 = new Location("LOC-002", "Headquarters2", "HQ Street 12");
         network.createLocation(hq);
+        network.createLocation(hq2);
 
         // --- Add Tariff for Location (validFrom includes time) ---
         Tariff tariff1 = new Tariff(
@@ -24,16 +26,22 @@ public class Main {
                 0.59, 0.10    // DC: €/kWh, €/minute
         );
         network.createTariffForLocation("LOC-001", tariff1);
+        network.createTariffForLocation("LOC-002", tariff1);
 
         // --- Add Charger ---
         Charger charger1 = new Charger(
                 1,
                 "1",
-                ChargerType.AC,
-                22,
-                hq
+                ChargerType.AC
         );
         network.addChargerToLocation("LOC-001", charger1);
+
+        Charger charger2 = new Charger(
+                2,
+                "1",
+                ChargerType.DC
+        );
+        network.addChargerToLocation("LOC-002", charger2);
 
         // --- Create & Register Account (replaces Client) ---
         Account account = new Account("A-001", "Alice", "alice@example.com");
@@ -42,7 +50,7 @@ public class Main {
         network.createAccount(account2);
 
         // --- Top up ---
-        account.topUpAccountWithMoney(50.0);
+        account.topUp(50);
 
         // --- Output state ---
         /*System.out.println("\nAccounts in charging network:");
@@ -69,13 +77,23 @@ public class Main {
                 12.5
         );
 
+        ChargingSession session2 = network.startChargingSession("A-001", "LOC-002", "1", start);
+
+        // simulate stop after 30 min + 12.5 kWh
+        ChargingSession finished2 = network.stopChargingSession(
+                session2.getSessionId(),
+                start.plusMinutes(30),
+                12.5
+        );
+
+
         System.out.println("\nSession finished:");
         System.out.println(" - durationMinutes=" + finished.getDurationMinutes());
         System.out.println(" - energyKWh=" + finished.getEnergyKWh());
         System.out.println(" - totalPrice=" + finished.getTotalPrice() + " EUR");
 
         System.out.println("\nBalance after charging:");
-        System.out.println(" - " + account.getAccountBalance() + " EUR");
+        System.out.println(" - " + account.getBalance() + " EUR");
 
         System.out.println("\nDemo finished.");
 
@@ -89,11 +107,17 @@ public class Main {
         }
 
         System.out.println("\nTransactions:");
-        for (Transaction tx : account.getTransactions()) {
-            System.out.println(" - txId=" + tx.getTransactionId()
-                    + " | position=" + tx.getPositionNumber()
-                    + " | amount=" + tx.getAmount() + " EUR"
-                    + " | time=" + tx.getStartTime());
-        }
+        System.out.println(account.toInvoiceString());
+
+
+
+        System.out.println(network.toNetworkStatusString());
+
+        hq.updateName("headqurter3");
+
+        network.updateLocationName("LOC-001", "headquarter5");
+
+        System.out.println(network.toNetworkStatusString());
+
     }
 }

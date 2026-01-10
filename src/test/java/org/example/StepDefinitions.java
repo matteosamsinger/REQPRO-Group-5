@@ -77,7 +77,7 @@ public class StepDefinitions {
 
     @Then("there should be a location with id {string} and name {string}")
     public void thereShouldBeALocationWithIdAndName(String id, String expectedName) {
-        Location found = network.findLocation(id);
+        Location found = network.readLocation(id);
         assertNotNull(found);
         assertEquals(expectedName, found.readName());
     }
@@ -90,7 +90,7 @@ public class StepDefinitions {
 
     @When("I look up the location with id {string}")
     public void iLookUpTheLocationWithId(String id) {
-        lookedUpLocation = network.findLocation(id);
+        lookedUpLocation = network.readLocation(id);
     }
 
     @Then("I see the location name {string} and address {string}")
@@ -102,14 +102,14 @@ public class StepDefinitions {
 
     @When("I change the name of the location with id {string} to {string}")
     public void iChangeTheNameOfTheLocationWithIdTo(String id, String newName) {
-        Location location = network.findLocation(id);
+        Location location = network.readLocation(id);
         assertNotNull(location);
         location.updateName(newName);
     }
 
     @Then("the location with id {string} should have name {string}")
     public void theLocationWithIdShouldHaveName(String id, String expectedName) {
-        Location location = network.findLocation(id);
+        Location location = network.readLocation(id);
         assertNotNull(location);
         assertEquals(expectedName, location.readName());
     }
@@ -121,7 +121,7 @@ public class StepDefinitions {
 
     @Then("there should be no location with id {string}")
     public void thereShouldBeNoLocationWithId(String id) {
-        assertNull(network.findLocation(id));
+        assertNull(network.readLocation(id));
     }
 
     // -------------------------
@@ -130,25 +130,25 @@ public class StepDefinitions {
 
     @When("I add a charger with number {string} type {string} and max power {int} kW to location {string}")
     public void iAddAChargerWithNumberTypeAndMaxPowerToLocation(String number, String type, int maxPower, String locationId) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         int chargerId = location.readChargers().size() + 1;
-        Charger charger = new Charger(chargerId, number, toChargerType(type), maxPower, location);
+        Charger charger = new Charger(chargerId, number, toChargerType(type));
 
         network.addChargerToLocation(locationId, charger);
     }
 
     @Then("the location with id {string} should have {int} charger")
     public void theLocationWithIdShouldHaveCharger(String locationId, int expectedCount) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location);
         assertEquals(expectedCount, location.readChargers().size());
     }
 
     @Then("the first charger at location {string} should have type {string}")
     public void theFirstChargerAtLocationShouldHaveType(String locationId, String expectedType) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location);
         assertFalse(location.readChargers().isEmpty(), "No chargers found at location " + locationId);
 
@@ -158,18 +158,18 @@ public class StepDefinitions {
 
     @Given("a charger with number {string} type {string} and max power {int} kW at location {string} exists")
     public void aChargerWithNumberTypeAndMaxPowerKWAtLocationExists(String number, String type, int maxPower, String locationId) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         int chargerId = location.readChargers().size() + 1;
-        Charger charger = new Charger(chargerId, number, toChargerType(type), maxPower, location);
+        Charger charger = new Charger(chargerId, number, toChargerType(type));
 
         network.addChargerToLocation(locationId, charger);
     }
 
     @When("I look up the charger with number {string} at location {string}")
     public void iLookUpTheChargerWithNumberAtLocation(String number, String locationId) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         lookedUpCharger = location.readChargerByNumber(number);
@@ -179,7 +179,6 @@ public class StepDefinitions {
     public void iSeeTheChargerTypeAndMaxPowerKW(String expectedType, int expectedMaxPower) {
         assertNotNull(lookedUpCharger, "No charger was looked up");
         assertEquals(expectedType.trim().toUpperCase(), lookedUpCharger.getType().name());
-        assertEquals(expectedMaxPower, lookedUpCharger.getMaxPowerKw());
     }
 
     @When("I delete the charger with number {string} at location {string}")
@@ -302,7 +301,7 @@ public class StepDefinitions {
 
     @And("the charger {string} at location {string} should be available again")
     public void theChargerAtLocationShouldBeAvailableAgain(String chargerNumber, String locationId) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         Charger charger = location.readChargerByNumber(chargerNumber);
@@ -313,7 +312,7 @@ public class StepDefinitions {
 
     @Given("charger {string} at location {string} is currently charging")
     public void chargerAtLocationIsCurrentlyCharging(String chargerNumber, String locationId) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         Charger charger = location.readChargerByNumber(chargerNumber);
@@ -324,7 +323,7 @@ public class StepDefinitions {
 
     @And("charger {string} at location {string} is available")
     public void chargerAtLocationIsAvailable(String chargerNumber, String locationId) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         Charger charger = location.readChargerByNumber(chargerNumber);
@@ -387,11 +386,22 @@ public class StepDefinitions {
         Account account = network.findAccount(clientId);
         assertNotNull(account, "Account not found: " + clientId);
 
-        int nextId = account.getTransactions().size() + 1;
-        Transaction tx = new Transaction(nextId, nextId, amount);
+        int pos = account.getInvoiceLineItems().size() + 1;
+
+        // Dummy-Daten (weil dieses Scenario keinen echten Ladevorgang startet)
+        InvoiceLineItem item = new InvoiceLineItem(
+                pos,
+                LocalDateTime.now(),
+                "DummyLocation",
+                "DummyCharger",
+                org.example.enums.ChargerType.AC,
+                0,
+                0.0,
+                amount
+        );
 
         account.debit(amount);
-        account.addTransaction(tx);
+        account.createInvoiceLineItem(item);
     }
 
     @And("I request the invoice status for client {string}")
@@ -407,7 +417,7 @@ public class StepDefinitions {
         assertNotNull(account, "Account not found: " + clientId);
 
         assertEquals(expectedTopUps, account.getTopUps().size());
-        assertEquals(expectedTransactions, account.getTransactions().size());
+        assertEquals(expectedTransactions, account.getInvoiceLineItems().size());
     }
 
     // -------------------------
@@ -416,7 +426,7 @@ public class StepDefinitions {
 
     @When("I set an energy tariff at location {string} with AC price per kWh {double} EUR and DC price per kWh {double} EUR")
     public void iSetAnEnergyTariffAtLocationWithACPricePerKWhAndDCPricePerKWh(String locationId, double acPrice, double dcPrice) {
-        Location location = network.findLocation(locationId);
+        Location location = network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
         // wichtig: validFrom muss so früh sein, dass es auch für beliebige Test-Zeitpunkte gilt

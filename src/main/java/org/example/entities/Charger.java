@@ -8,15 +8,13 @@ public class Charger {
     private final int chargerId;
     private String number;
     private ChargerType type;
-    private int maxPowerKw;
     private Location location;
     private ChargerStatus status;
 
-    public Charger(int chargerId, String number, ChargerType type, int maxPowerKw, Location location) {
+    public Charger(int chargerId, String number, ChargerType type) {
         this.chargerId = chargerId;
         this.number = number;
         this.type = type;
-        this.maxPowerKw = maxPowerKw;
         this.location = location;
         this.status = ChargerStatus.AVAILABLE; // Standard: verfügbar
     }
@@ -31,10 +29,6 @@ public class Charger {
 
     public ChargerType getType() {
         return type;
-    }
-
-    public int getMaxPowerKw() {
-        return maxPowerKw;
     }
 
     public Location getLocation() {

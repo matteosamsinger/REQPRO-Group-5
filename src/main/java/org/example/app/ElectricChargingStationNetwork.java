@@ -26,7 +26,7 @@ public class ElectricChargingStationNetwork {
     }
 
     //Location ID lesen - read
-    public Location findLocation(String id) {
+    public Location readLocation(String id) {
         return locationManager.readLocation(id);
     }
 
@@ -133,6 +133,62 @@ public class ElectricChargingStationNetwork {
 
         return sb.toString();
     }
+
+    public String toNetworkStatusString() {
+        String nl = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("NETWORK STATUS").append(nl);
+
+        List<Location> locations = new ArrayList<>(locationManager.readAllLocations());
+        locations.sort(Comparator.comparing(Location::readId));
+
+        if (locations.isEmpty()) {
+            sb.append("  (no locations)").append(nl);
+            return sb.toString();
+        }
+
+        for (Location loc : locations) {
+            sb.append(nl)
+                    .append("Location ").append(loc.readId())
+                    .append(" | ").append(loc.readName())
+                    .append(" | ").append(loc.readAddress())
+                    .append(nl);
+
+            // Tarif (aktuell gültig)
+            try {
+                Tariff t = locationManager.readCurrentTariff(loc.readId());
+                sb.append(String.format(java.util.Locale.US,
+                        "  Prices: AC %.2f €/kWh + %.2f €/min | DC %.2f €/kWh + %.2f €/min%n",
+                        t.getPricePerKWh(org.example.enums.ChargerType.AC),
+                        t.getPricePerMinute(org.example.enums.ChargerType.AC),
+                        t.getPricePerKWh(org.example.enums.ChargerType.DC),
+                        t.getPricePerMinute(org.example.enums.ChargerType.DC)
+                ));
+            } catch (Exception e) {
+                sb.append("  Prices: (no tariff set)").append(nl);
+            }
+
+            // Charger Status
+            List<Charger> chargers = new ArrayList<>(loc.readChargers()); // falls bei dir getChargers()/readChargers()
+            chargers.sort(Comparator.comparing(Charger::getNumber));
+
+            if (chargers.isEmpty()) {
+                sb.append("  Chargers: (none)").append(nl);
+            } else {
+                sb.append("  Chargers:").append(nl);
+                for (Charger c : chargers) {
+                    sb.append("   - #").append(c.getNumber())
+                            .append(" | type=").append(c.getType())
+                            .append(" | status=").append(c.getStatus())
+                            .append(nl);
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
 
 
     // --- Charging-bezogene Methoden ---

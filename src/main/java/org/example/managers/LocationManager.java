@@ -17,6 +17,9 @@ public class LocationManager {
     //Locations
     //Create
     public void createLocation(Location location) {
+        if (locations.containsKey(location.readId())) {
+            throw new IllegalArgumentException("Location already exists: " + location.readId());
+        }
         locations.put(location.readId(), location);
     }
 
