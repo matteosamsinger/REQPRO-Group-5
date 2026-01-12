@@ -1,8 +1,10 @@
 package org.example.steps.ChargingSessionSteps;
 
 import io.cucumber.java.en.And;
-import org.example.Account;
+import org.example.entities.Account;
 import org.example.steps.support.ScenarioContext;
+import org.example.enums.ChargerStatus;
+
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -16,14 +18,16 @@ public class ChargingSessionUpdateSteps {
         java.time.LocalDateTime endTime = java.time.LocalDateTime.parse(endTimeText);
 
         // Session beenden und Preis berechnen
-        ctx.currentSession.stop(endTime, energyKWh, pricePerKWh);
+        ctx.currentSession.stop(endTime, energyKWh);
+
 
         // Betrag vom Account abbuchen
-        Account account = ctx.currentClient.getAccount();
-        account.debit(ctx.currentSession.getTotalPrice());
+        ctx.currentAccount.debit(ctx.currentSession.getTotalPrice());
+
 
         // Charger wieder verfügbar
-        ctx.currentCharger.setStatus("AVAILABLE");
+        ctx.currentCharger.setStatus(ChargerStatus.AVAILABLE);
+
     }
 
 

@@ -1,10 +1,14 @@
 package org.example.steps.ChargingSessionSteps;
 
 import io.cucumber.java.en.When;
-import org.example.Charger;
-import org.example.ChargingSession;
-import org.example.Location;
+import org.example.entities.Charger;
+import org.example.entities.Tariff;
+import org.example.entities.Account;
+import org.example.entities.ChargingSession;
+import org.example.entities.Location;
+import org.example.enums.ChargerStatus;
 import org.example.steps.support.ScenarioContext;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -13,23 +17,47 @@ public class ChargingSessionCreateSteps {
 
     @When("I start a charging session for client {string} at charger {string} at {string}")
     public void iStartAChargingSessionForClientAtChargerAt(String clientId, String chargerNumber, String startTimeText) {
-        ctx.currentClient = ctx.network.findClient(clientId);
-        assertNotNull(ctx.currentClient, "Client not found: " + clientId);
 
-        ctx.currentCharger = findChargerByNumber(chargerNumber);
-        assertNotNull(ctx.currentCharger, "Charger not found: " + chargerNumber);
+        LocalDateTime startTime = LocalDateTime.parse(startTimeText);
 
-        java.time.LocalDateTime startTime = java.time.LocalDateTime.parse(startTimeText);
+        // Account
+        Account account = ctx.network.findAccount(clientId);
+        assertNotNull(account, "Account not found: " + clientId);
+        ctx.currentAccount = account;
 
-        ctx.currentSession = new ChargingSession(1, ctx.currentClient, ctx.currentCharger, startTime);
+        // Charger
+        Charger charger = findChargerByNumber(chargerNumber);
+        assertNotNull(charger, "Charger not found: " + chargerNumber);
+        ctx.currentCharger = charger;
 
-        // Charger ist jetzt im Status "CHARGING"
-        ctx.currentCharger.setStatus("CHARGING");
+        // Location kommt vom Charger
+        Location location = charger.getLocation();
+        assertNotNull(location, "Charger has no location assigned: " + chargerNumber);
+
+        // Tarif
+        Tariff tariff = location.readTariffAt(startTime);
+        double pricePerKWhAtStart = tariff.getPricePerKWh(charger.getType());
+        double pricePerMinuteAtStart = tariff.getPricePerMinute(charger.getType());
+
+        // Session erstellen
+        int sessionId = 1;
+        ctx.currentSession = new ChargingSession(
+                sessionId,
+                account,
+                charger,
+                startTime,
+                pricePerKWhAtStart,
+                pricePerMinuteAtStart
+        );
+
+        // Status setzen (wahrscheinlich CHARGING, nicht AVAILABLE)
+        ctx.currentCharger.setStatus(ChargerStatus.IN_USE);
     }
 
+
     private Charger findChargerByNumber(String chargerNumber) {
-        for (Location loc : ctx.network.getAllLocations()) {
-            for (Charger charger : loc.getChargers()) {
+        for (Location loc : ctx.network.readAllLocations()) {
+            for (Charger charger : loc.readChargers()) {
                 if (charger.getNumber().equals(chargerNumber)) return charger;
             }
         }

@@ -1,7 +1,7 @@
 package org.example.steps.common;
 
 import io.cucumber.java.en.Given;
-import org.example.ElectricChargingStationNetwork;
+import org.example.app.ElectricChargingStationNetwork;
 import org.example.steps.support.ScenarioContext;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
