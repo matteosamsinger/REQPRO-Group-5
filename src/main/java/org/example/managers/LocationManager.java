@@ -4,6 +4,7 @@ import org.example.entities.Charger;
 import org.example.entities.Location;
 import org.example.entities.Tariff;
 import org.example.enums.ChargerStatus;
+import org.example.enums.ChargerType;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -47,21 +48,23 @@ public class LocationManager {
     //Delete
     public void deleteLocation(String id) {
         Location location = readLocation(id);
+
+        // Edge Case: unbekannte Location -> idempotent (keine Exception)
         if (location == null) {
-            throw new IllegalArgumentException("Location not found: " + id);
-        }
-
-        // Wenn irgendein Charger gerade benutzt wird -> löschen verbieten
-        boolean chargingInProgress = location.readChargers().stream()
-                .anyMatch(c -> c.getStatus() == ChargerStatus.IN_USE);
-
-        if (chargingInProgress) {
-            throw new IllegalStateException(
-                    "Cannot delete location " + id + " because a charger is currently in use"
-            );
+            return;
         }
 
 
+        // Error Case: wenn irgendein Charger an der Location gerade IN_USE ist -> Exception
+        for (Charger c : location.readChargers()) {
+            if (c.getStatus() == ChargerStatus.IN_USE) {
+                throw new IllegalStateException(
+                        "Cannot delete location " + id + ": active charging session exists"
+                );
+            }
+        }
+
+        // sonst löschen
         locations.remove(id);
     }
 
@@ -85,18 +88,34 @@ public class LocationManager {
 
         Charger charger = location.readChargerByNumber(number);
         if (charger == null) {
-            throw new IllegalArgumentException(
-                    "Charger not found at location " + locationId + ": " + number
-            );
+            throw new IllegalArgumentException("Charger not found at location " + locationId + ": " + number);
         }
 
         if (charger.getStatus() == ChargerStatus.IN_USE) {
-            throw new IllegalStateException(
-                    "Cannot delete charger " + number + " at location " + locationId + " because it is currently in use"
-            );
+            throw new IllegalStateException("Cannot delete charger " + number + " at location " + locationId + " because it is currently in use");
         }
 
         location.deleteChargerByNumber(number);
+    }
+
+
+    //update
+    public void updateChargerType(String locationId, String number, ChargerType newType) {
+        Location location = readLocation(locationId);
+        if (location == null) {
+            throw new IllegalArgumentException("Location not found: " + locationId);
+        }
+
+        Charger charger = location.readChargerByNumber(number);
+        if (charger == null) {
+            throw new IllegalArgumentException("Charger not found at location " + locationId + ": " + number);
+        }
+
+        if (charger.getStatus() == ChargerStatus.IN_USE) {
+            throw new IllegalStateException("Cannot update charger " + number + " at location " + locationId + ": charger is in use");
+        }
+
+        charger.setType(newType);
     }
 
 

@@ -7,6 +7,7 @@ public class ChargingSession {
 
     private final int sessionId;
     private final Account account;
+    private final String locationId;
     private final Charger charger;
 
     private final LocalDateTime startTime;
@@ -18,7 +19,7 @@ public class ChargingSession {
     private long durationMinutes;
     private double totalPrice;
 
-    public ChargingSession(int sessionId, Account account, Charger charger,
+    public ChargingSession(int sessionId, Account account, String locationId, Charger charger,
                            LocalDateTime startTime, double pricePerKWhAtStart, double pricePerMinuteAtStart) {
         this.sessionId = sessionId;
         this.account = account;
@@ -26,6 +27,7 @@ public class ChargingSession {
         this.startTime = startTime;
         this.pricePerKWhAtStart = pricePerKWhAtStart;
         this.pricePerMinuteAtStart = pricePerMinuteAtStart;
+        this.locationId = locationId;
     }
 
     /**
@@ -54,6 +56,10 @@ public class ChargingSession {
 
     public Account getAccount() {
         return account;
+    }
+
+    public String getLocationId() {
+        return locationId;
     }
 
     public Charger getCharger() {

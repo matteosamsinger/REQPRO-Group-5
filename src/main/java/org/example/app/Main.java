@@ -130,7 +130,7 @@ public class Main {
                 12.5
         );*/
 
-        network.deleteChargerFromLocation("LOC-001", "1");
+       // network.deleteChargerFromLocation("LOC-001", "1");
 
 
         System.out.println(network.toNetworkStatusString());

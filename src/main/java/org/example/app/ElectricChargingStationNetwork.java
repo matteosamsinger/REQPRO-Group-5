@@ -1,6 +1,7 @@
 package org.example.app;
 
 import org.example.entities.*;
+import org.example.enums.ChargerType;
 import org.example.managers.AccountManager;
 import org.example.managers.ChargingManager;
 import org.example.managers.LocationManager;
@@ -46,6 +47,9 @@ public class ElectricChargingStationNetwork {
 
     //Location entfernen vom netz - delete
     public void deleteLocation(String id) {
+        if (chargingManager.hasActiveSessionAtLocation(id)) {
+            throw new IllegalStateException("Cannot delete location " + id + ": active charging session exists");
+        }
         locationManager.deleteLocation(id);
     }
 
@@ -62,10 +66,14 @@ public class ElectricChargingStationNetwork {
         locationManager.deleteChargerFromLocation(locationId, number);
     }
 
+    //update
+    public void updateChargerType(String locationId, String number, ChargerType newType) {
+        locationManager.updateChargerType(locationId, number, newType);
+    }
 
     //Tariff
     /**
-     * Fügt einen (neuen) Tarif für einen Standort hinzu.
+     * Fügt einen Tarif für einen Standort hinzu.
      * Tarife können mehrmals pro Tag wechseln -> daher "add" statt "replace".
      */
     //Create
@@ -101,6 +109,9 @@ public class ElectricChargingStationNetwork {
 
     //delete
     public void deleteAccount(String accountId) {
+        if (chargingManager.hasActiveSessionForAccount(accountId)) {
+            throw new IllegalStateException("Cannot delete account " + accountId + ": active charging session exists");
+        }
         accountManager.deleteAccount(accountId);
     }
 
