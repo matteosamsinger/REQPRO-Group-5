@@ -1,6 +1,7 @@
 package org.example.steps.support;
 
-import org.example.*;
+import org.example.app.ElectricChargingStationNetwork;
+import org.example.entities.*;
 
 import java.util.List;
 
@@ -9,12 +10,13 @@ public class ScenarioContext {
 
     public Location lookedUpLocation;
     public Charger lookedUpCharger;
-    public Client lookedUpClient;
+    public Account lookedUpAccount;
 
     public ChargingSession currentSession;
-    public Client currentClient;
+    public Account currentAccount;
     public Charger currentCharger;
 
     public List<Charger> lastNetworkStatus;
 }
+
 

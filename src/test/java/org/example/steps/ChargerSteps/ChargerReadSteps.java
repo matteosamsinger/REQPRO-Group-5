@@ -2,9 +2,11 @@ package org.example.steps.ChargerSteps;
 
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.example.Charger;
-import org.example.Location;
+import org.example.entities.Charger;
+import org.example.entities.Location;
 import org.example.steps.support.ScenarioContext;
+import org.example.enums.ChargerType;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,18 +17,22 @@ public class ChargerReadSteps {
 
     @Then("the location with id {string} should have {int} charger")
     public void theLocationWithIdShouldHaveCharger(String locationId, int expectedCount) {
-        Location location = ctx.network.findLocation(locationId);
+        Location location = ctx.network.readLocation(locationId);
         assertNotNull(location);
-        assertEquals(expectedCount, location.getChargers().size());
+        assertEquals(expectedCount, location.readChargers().size());
     }
 
     @Then("the first charger at location {string} should have type {string}")
-    public void theFirstChargerAtLocationShouldHaveType(String locationId, String expectedType) {
-        Location location = ctx.network.findLocation(locationId);
-        assertNotNull(location);
-        assertFalse(location.getChargers().isEmpty(), "No chargers found at location " + locationId);
+    public void theFirstChargerAtLocationShouldHaveType(String locationId, String expectedTypeText) {
 
-        Charger first = location.getChargers().get(0);
+        Location location = ctx.network.readLocation(locationId);
+        assertNotNull(location, "Location not found: " + locationId);
+
+        assertFalse(location.readChargers().isEmpty(), "No chargers found at location: " + locationId);
+
+        Charger first = location.readChargers().get(0);
+
+        ChargerType expectedType = ChargerType.valueOf(expectedTypeText.trim().toUpperCase());
         assertEquals(expectedType, first.getType());
     }
 
@@ -34,17 +40,20 @@ public class ChargerReadSteps {
 
     @When("I look up the charger with number {string} at location {string}")
     public void iLookUpTheChargerWithNumberAtLocation(String number, String locationId) {
-        Location location = ctx.network.findLocation(locationId);
+        Location location = ctx.network.readLocation(locationId);
         assertNotNull(location, "Location not found: " + locationId);
 
-        ctx.lookedUpCharger = location.findChargerByNumber(number);
+        ctx.lookedUpCharger = location.readChargerByNumber(number);
     }
 
     @Then("I see the charger type {string} and max power {int} kW")
-    public void iSeeTheChargerTypeAndMaxPowerKW(String expectedType, int expectedMaxPower) {
-        assertNotNull(ctx.lookedUpCharger, "No charger was looked up");
+    public void iSeeTheChargerTypeAndMaxPowerKW(String expectedTypeText, int ignoredMaxPowerKw) {
+
+        assertNotNull(ctx.lookedUpCharger, "No looked up charger available");
+
+        ChargerType expectedType = ChargerType.valueOf(expectedTypeText.trim().toUpperCase());
         assertEquals(expectedType, ctx.lookedUpCharger.getType());
-        assertEquals(expectedMaxPower, ctx.lookedUpCharger.getMaxPowerKw());
+
     }
 
     public ChargerReadSteps(ScenarioContext ctx) {

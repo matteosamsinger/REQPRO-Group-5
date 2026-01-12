@@ -2,8 +2,7 @@ package org.example.steps.ChargingSessionSteps;
 
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
-import org.example.Account;
-import org.example.Client;
+import org.example.entities.Account;
 import org.example.steps.support.ScenarioContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,10 +27,9 @@ public class ChargingSessionReadSteps {
 
     @And("the account balance of client {string} should be {double} EUR")
     public void theAccountBalanceOfClientShouldBeEur(String clientId, double expectedBalance) {
-        Client client = ctx.network.findClient(clientId);
-        assertNotNull(client, "Client not found: " + clientId);
+        Account account = ctx.network.findAccount(clientId);
+        assertNotNull(account, "Client not found: " + clientId);
 
-        Account account = client.getAccount();
         assertNotNull(account, "Account for client not found: " + clientId);
 
         assertEquals(expectedBalance, account.getBalance(), 0.0001);
