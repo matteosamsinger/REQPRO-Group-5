@@ -119,5 +119,22 @@ public class Main {
 
         System.out.println(network.toNetworkStatusString());
 
+        // --- Start session ---
+        LocalDateTime start3 = LocalDateTime.now();
+        ChargingSession session3 = network.startChargingSession("A-001", "LOC-001", "1", start3);
+
+        // simulate stop after 30 min + 12.5 kWh
+        /*ChargingSession finished3 = network.stopChargingSession(
+                session.getSessionId(),
+                start.plusMinutes(30),
+                12.5
+        );*/
+
+        network.deleteChargerFromLocation("LOC-001", "1");
+
+
+        System.out.println(network.toNetworkStatusString());
+
+        System.out.println("succs");
     }
 }

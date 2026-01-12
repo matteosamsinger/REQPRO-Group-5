@@ -3,6 +3,7 @@ package org.example.managers;
 import org.example.entities.Charger;
 import org.example.entities.Location;
 import org.example.entities.Tariff;
+import org.example.enums.ChargerStatus;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -45,6 +46,22 @@ public class LocationManager {
 
     //Delete
     public void deleteLocation(String id) {
+        Location location = readLocation(id);
+        if (location == null) {
+            throw new IllegalArgumentException("Location not found: " + id);
+        }
+
+        // Wenn irgendein Charger gerade benutzt wird -> löschen verbieten
+        boolean chargingInProgress = location.readChargers().stream()
+                .anyMatch(c -> c.getStatus() == ChargerStatus.IN_USE);
+
+        if (chargingInProgress) {
+            throw new IllegalStateException(
+                    "Cannot delete location " + id + " because a charger is currently in use"
+            );
+        }
+
+
         locations.remove(id);
     }
 
@@ -65,6 +82,20 @@ public class LocationManager {
         if (location == null) {
             throw new IllegalArgumentException("Location not found: " + locationId);
         }
+
+        Charger charger = location.readChargerByNumber(number);
+        if (charger == null) {
+            throw new IllegalArgumentException(
+                    "Charger not found at location " + locationId + ": " + number
+            );
+        }
+
+        if (charger.getStatus() == ChargerStatus.IN_USE) {
+            throw new IllegalStateException(
+                    "Cannot delete charger " + number + " at location " + locationId + " because it is currently in use"
+            );
+        }
+
         location.deleteChargerByNumber(number);
     }
 
