@@ -1,5 +1,8 @@
 package org.example.entities;
 
+import org.example.enums.ChargerStatus;
+import org.example.enums.ChargerType;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -94,6 +97,19 @@ public class Location {
 
     //neuer Tayrif wird hinzugefügen - Preise können mehrmals pro Tag wechseln
     public void createTariff(Tariff tariff) {
+        if (tariff == null) {
+            throw new IllegalArgumentException("Tariff must not be null");
+        }
+
+        // Negative Preise verhindern (Error-Case im Feature)
+        if (tariff.getPricePerKWh(ChargerType.AC) < 0
+                || tariff.getPricePerKWh(ChargerType.AC) < 0
+                || tariff.getPricePerMinute(ChargerType.DC) < 0
+                || tariff.getPricePerMinute(ChargerType.AC) < 0) {
+            throw new IllegalArgumentException("Tariff prices must be >= 0");
+        }
+
+
         tariffs.add(tariff);
         tariffs.sort(Comparator.comparing(Tariff::getValidFrom));
     }
@@ -101,6 +117,13 @@ public class Location {
 
     //Delete
     public void deleteChargerByNumber(String number) {
+        Charger charger = readChargerByNumber(number);
+        if (charger == null) {
+            throw new IllegalArgumentException("Charger not found at location " + id + ": " + number);
+        }
+        if (charger.getStatus() == ChargerStatus.IN_USE) {
+            throw new IllegalStateException("Cannot delete charger " + number + " at location " + id + ": charger is in use");
+        }
         chargers.removeIf(c -> c.getNumber().equals(number));
     }
 

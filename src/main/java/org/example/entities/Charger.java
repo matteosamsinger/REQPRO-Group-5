@@ -31,6 +31,11 @@ public class Charger {
         return type;
     }
 
+    public void setType(ChargerType type) {
+        if (type == null) throw new IllegalArgumentException("Charger type must not be null");
+        this.type = type;
+    }
+
     public Location getLocation() {
         return location;
     }

@@ -43,6 +43,7 @@ public class ChargingManager {
         ChargingSession session = new ChargingSession(
                 nextSessionId++,
                 account,
+                locationId,
                 charger,
                 startTime,
                 pricePerKWh,
@@ -98,4 +99,20 @@ public class ChargingManager {
         }
         return result;
     }
+
+    public boolean hasActiveSessionAtLocation(String locationId) {
+        for (ChargingSession s : activeSessions.values()) {
+            if (locationId.equals(s.getLocationId())) return true;
+        }
+        return false;
+    }
+
+    public boolean hasActiveSessionForAccount(String accountId) {
+        for (ChargingSession s : activeSessions.values()) {
+            if (accountId.equals(s.getAccount().getAccountId())) return true;
+        }
+        return false;
+    }
+
+
 }
