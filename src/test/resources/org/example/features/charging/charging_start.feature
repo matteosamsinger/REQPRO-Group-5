@@ -16,7 +16,7 @@ Feature: Start charging session
   # Happy Path
   # -------------------------
   Scenario: Start a charging session successfully
-    And a tariff exists at location "LOC-010" with AC kWh 0.35 EUR, AC min 0.05 EUR, DC kWh 0.60 EUR, DC min 0.10 EUR valid from "2000-01-01T00:00"
+    Given a tariff exists at location "LOC-010" with AC kWh 0.35 EUR, AC min 0.05 EUR, DC kWh 0.60 EUR, DC min 0.10 EUR valid from "2000-01-01T00:00"
     When I start a charging session for account "A-010" at location "LOC-010" charger "1" at "2026-01-10T10:00"
     Then a charging session should be started
     And charger "1" at location "LOC-010" should have status "IN_USE"
@@ -25,7 +25,7 @@ Feature: Start charging session
   # Edge Case
   # -------------------------
   Scenario: Starting a second session on the same charger fails
-    And a tariff exists at location "LOC-010" with AC kWh 0.35 EUR, AC min 0.05 EUR, DC kWh 0.60 EUR, DC min 0.10 EUR valid from "2000-01-01T00:00"
+    Given a tariff exists at location "LOC-010" with AC kWh 0.35 EUR, AC min 0.05 EUR, DC kWh 0.60 EUR, DC min 0.10 EUR valid from "2000-01-01T00:00"
     When I start a charging session for account "A-010" at location "LOC-010" charger "1" at "2026-01-10T10:00"
     And I start a charging session for account "A-020" at location "LOC-010" charger "1" at "2026-01-10T10:05"
     Then I should get an error "Charger not available: 1"
