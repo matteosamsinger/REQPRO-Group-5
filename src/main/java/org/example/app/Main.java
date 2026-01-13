@@ -136,5 +136,7 @@ public class Main {
         System.out.println(network.toNetworkStatusString());
 
         System.out.println("succs");
+
+
     }
 }

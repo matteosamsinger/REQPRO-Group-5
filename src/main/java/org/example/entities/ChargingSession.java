@@ -87,13 +87,13 @@ public class ChargingSession {
     }
 
 
-    public double getPricePerKWhAtStart() {
+  /*  public double getPricePerKWhAtStart() {
         return pricePerKWhAtStart;
     }
 
     public double getPricePerMinuteAtStart() {
         return pricePerMinuteAtStart;
-    }
+    }*/
 }
 
 
